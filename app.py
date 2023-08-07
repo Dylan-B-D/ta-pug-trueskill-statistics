@@ -113,7 +113,12 @@ def calculate_ratings(game_data):
     return player_ratings, player_names
 
 @app.route('/')
+@app.route('/')
 def home():
+    return render_template('home.html')
+
+@app.route('/rankings')
+def rankings():
     game_data = fetch_data()
     player_ratings, player_names = calculate_ratings(game_data)
 
@@ -127,7 +132,7 @@ def home():
         for i, player_id in enumerate(sorted_player_ids)
     ]
 
-    return render_template('index.html', player_list=player_list)
+    return render_template('rankings.html', player_list=player_list)
 
 if __name__ == "__main__":
     app.run(debug=True)

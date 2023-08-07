@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>T:A Trueskill Statistics</title>
+</head>
+<body>
+    <h1>T:A Trueskill Statistics</h1>
+
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('home') }}">Home</a></li>
+            <li><a href="{{ url_for('rankings') }}">Trueskill Rankings</a></li>
+            <li><a href="#">Team Calculator</a></li>
+            <li><a href="#">Match History</a></li>
+        </ul>
+    </nav>
+
+    {% block content %}{% endblock %}
+</body>
+</html>

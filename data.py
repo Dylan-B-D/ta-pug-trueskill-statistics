@@ -55,6 +55,8 @@ def calculate_ratings(game_data):
     all_player_ids = set(player['user']['id'] for match in game_data for player in match['players'] if player['captain'] == 0)
     player_ratings = {player_id: ts.create_rating() for player_id in all_player_ids}
     player_names = {player['user']['id']: player['user']['name'] for match in game_data for player in match['players'] if player['captain'] == 0}
+    player_games = {player_id: 0 for player_id in all_player_ids}
+
 
     # Initialize player pick orders for players who were never captains and when pickOrder is not None
     player_picks = {player_id: [] for player_id in all_player_ids}
@@ -62,13 +64,15 @@ def calculate_ratings(game_data):
     # Process each match
     for match in game_data:
         # Exclude the game if the player was a captain
-        match_players = [player for player in match['players'] if player['captain'] == 0]
+        match_players = [player for player in match['players'] if player['captain'] == 0]     
 
         # Record the pick order for each player who was not a captain and where pickOrder is not None
         for player in match_players:
             if player['pickOrder'] is not None:
                 player_picks[player['user']['id']].append(player['pickOrder'])
 
+            # Increment the game count for each player in the match
+            player_games[player['user']['id']] += 1
         # Create a list of teams and corresponding player ID lists for the TrueSkill rate function
         teams = []
         team_player_ids = []
@@ -107,6 +111,7 @@ def calculate_ratings(game_data):
     # Calculate and add the average bonus for each pick order
     for player_id, rating in player_ratings.items():
         pick_bonus = sum(bonus(pick) for pick in player_picks[player_id]) / len(player_picks[player_id]) if player_picks[player_id] else 0
-        player_ratings[player_id] = trueskill.Rating(mu=rating.mu + pick_bonus, sigma=rating.sigma)
+        # player_ratings[player_id] = trueskill.Rating(mu=rating.mu + pick_bonus, sigma=rating.sigma)
+        player_ratings[player_id] = trueskill.Rating(mu=rating.mu, sigma=rating.sigma)
 
-    return player_ratings, player_names
+    return player_ratings, player_names, player_games

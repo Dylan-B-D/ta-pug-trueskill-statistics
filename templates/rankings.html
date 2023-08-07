@@ -1,24 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2>Trueskill Rankings</h2>
-
-    <table>
-        <tr>
-            <th>Rank</th>
-            <th>Player Name</th>
-            <th>Trueskill</th>
-            <th>μ</th>
-            <th>σ</th>
-        </tr>
-        {% for player in player_list %}
-            <tr>
-                <td>{{ player.rank }}</td>
-                <td>{{ player.name }}</td>
-                <td>{{ player.trueskill }}</td>
-                <td>{{ player.mu }}</td>
-                <td>{{ player.sigma }}</td>
-            </tr>
-        {% endfor %}
-    </table>
+    <h2 class="header centered-text">Trueskill Rankings</h2>
+    <form method="POST" class="date-picker-form">
+        <label for="start_date">From</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date.isoformat() }}">
+        <label for="end_date">To</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date.isoformat() }}">
+        <input type="submit" value="Update">
+    </form>
+    
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table>
+                <tr>
+                    <th style="width: 10%;">Rank</th>
+                    <th style="width: 40%;">Player Name</th>
+                    <th style="width: 15%;">Trueskill</th>
+                    <th style="width: 15%;">μ</th>
+                    <th style="width: 15%;">σ</th>
+                </tr>
+                {% for player in player_list %}
+                    <tr>
+                        <td>{{ player.rank }}</td>
+                        <td>{{ player.name }}</td>
+                        <td>{{ player.trueskill }}</td>
+                        <td>{{ player.mu }}</td>
+                        <td>{{ player.sigma }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>  
 {% endblock %}
+

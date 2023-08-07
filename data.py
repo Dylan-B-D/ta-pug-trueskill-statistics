@@ -7,10 +7,10 @@ import math
 
 def fetch_data(start_date, end_date):
     # Fetch the data
-    response = requests.get('https://sh4z.se/pugstats/naTA.json')
+    response = requests.get('https://sh4z.se/pugstats/ta.json')
 
     # The content returned by the server is a string, so we need to parse it into a JSON object
-    json_content = response.text.replace('datanaTA = ', '')
+    json_content = response.text.replace('datata = ', '')
 
     match = re.search(r'\[.*\]', json_content)
     if match:
@@ -21,7 +21,7 @@ def fetch_data(start_date, end_date):
 
     # Filter for games in the PUG queue, after the start date and before the end date
     game_data = [game for game in game_data 
-                 if game['queue']['name'] == 'PUGz' 
+                 if game['queue']['name'] == 'PUG' 
                  and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date]
 
     return game_data
@@ -41,7 +41,7 @@ def decay_factor(timestamp, no_decay_period=90, half_life=365):
         decay = 1.0
     else:
         # Exponential decay with the given half-life
-        decay = 0.8 ** ((days_since_game - no_decay_period) / half_life)
+        decay = 1 ** ((days_since_game - no_decay_period) / half_life)
 
     return decay
 
@@ -94,7 +94,7 @@ def calculate_ratings(game_data):
         for i, team in enumerate(teams):
             for j, player_rating in enumerate(team):
                 decay = decay_factor(match['timestamp'])
-                sigma_increase = 0.0 + 0.07 * (1 - decay)  # Increase sigma by 0% to 7% depending on decay
+                sigma_increase = 0.0 + 0.0 * (1 - decay)  # Increase sigma by 0% to 7% depending on decay
                 player_ratings[team_player_ids[i][j]] = trueskill.Rating(mu=new_ratings[i][j].mu, sigma=new_ratings[i][j].sigma + sigma_increase)
 
     # Compute average pick rates

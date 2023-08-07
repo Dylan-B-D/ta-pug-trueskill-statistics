@@ -3,9 +3,22 @@
 {% block content %}
     <h2>Trueskill Rankings</h2>
 
-    <ul>
-    {% for player in player_list %}
-        <li>{{ player }}</li>
-    {% endfor %}
-    </ul>
+    <table>
+        <tr>
+            <th>Rank</th>
+            <th>Player Name</th>
+            <th>Trueskill</th>
+            <th>μ</th>
+            <th>σ</th>
+        </tr>
+        {% for player in player_list %}
+            <tr>
+                <td>{{ player.rank }}</td>
+                <td>{{ player.name }}</td>
+                <td>{{ player.trueskill }}</td>
+                <td>{{ player.mu }}</td>
+                <td>{{ player.sigma }}</td>
+            </tr>
+        {% endfor %}
+    </table>
 {% endblock %}

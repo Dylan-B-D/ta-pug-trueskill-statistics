@@ -118,6 +118,7 @@ def home():
     return render_template('home.html')
 
 @app.route('/rankings')
+@app.route('/rankings')
 def rankings():
     game_data = fetch_data()
     player_ratings, player_names = calculate_ratings(game_data)
@@ -127,8 +128,13 @@ def rankings():
 
     # Format player names and ratings
     player_list = [
-        f"{i+1}: {player_names[player_id]} trueskill {player_ratings[player_id].mu - 3*player_ratings[player_id].sigma:.2f} "
-        f"(mu {player_ratings[player_id].mu:.1f}, sigma {player_ratings[player_id].sigma:.1f})"
+        {
+            "rank": i+1,
+            "name": player_names[player_id],
+            "trueskill": f"{player_ratings[player_id].mu - 3*player_ratings[player_id].sigma:.2f}",
+            "mu": f"{player_ratings[player_id].mu:.1f}",
+            "sigma": f"{player_ratings[player_id].sigma:.1f}",
+        }
         for i, player_id in enumerate(sorted_player_ids)
     ]
 

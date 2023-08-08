@@ -231,3 +231,82 @@ select:hover {
     background-color: #a56d31;
     color: white;
 }
+.table-container {
+    padding-left: 10%;
+    padding-right: 10%;
+}
+.table-container ul {
+    list-style-type: none;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+    border-radius: 20px;
+    color:#444444;
+    box-shadow: 0 0 10px 5px #00000075;
+}
+.table-container li {
+    margin-bottom: 4px;
+    position: relative;
+}
+.table-container ul.win {
+    background-color: #8de79cc4;  
+}
+
+.table-container ul.loss {
+    background-color: #ffbbb3b9; 
+}
+
+.table-container ul.tie {
+    background-color: #fffeb6;  
+}
+.table-container li.captain {
+    font-weight: bold;
+}
+.win-prob-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 260px;
+    margin-left: 0px;
+    width: 100%;
+}
+
+.win-prob-bar {
+    width: 100%;
+    height: 16px;
+    border-radius: 20px;
+    background-color: #dd938c; /* Color for Team 2 (default background) */
+    position: relative;
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+.team1-prob {
+    height: 100%;
+    border-radius: 20px 0px 0px 20px;
+    background-color: #8de79c; /* Color for Team 1 */
+}
+
+/* When Team 2 has a higher chance to win */
+.win-prob-bar.team2-favored {
+    background-color: #8de79c; /* Color for Team 1 */
+}
+
+.win-prob-bar.team2-favored .team1-prob {
+    background-color: #dd938c; /* Color for Team 2 */
+}
+
+/* Marker in the center of the progress bar */
+.win-prob-bar::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: #333; /* Color of the center marker */
+    top: 50%;
+    transform: translateY(-50%);
+    left: 50%;
+    z-index: 2;
+}
+
+

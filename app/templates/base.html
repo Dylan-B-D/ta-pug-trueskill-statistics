@@ -6,15 +6,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="dark-mode"> <!-- Add the dark-mode class to the body tag for default dark mode -->
+<body class="dark-mode"> 
     <header>
-        <h1 style="font-size: 1.5em;">T:A Trueskill Statistics</h1>  <!-- Adjust font size here -->
+        <h1 style="font-size: 1.5em;">T:A Trueskill Statistics</h1> 
         <nav>
             <ul>
                 <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('rankings') }}">Trueskill Rankings</a></li>
                 <li><a href="#">Team Calculator</a></li>
-                <li><a href="#">Match History</a></li>
+                <li><a href="{{ url_for('match_history') }}">Match History</a>
+                </li>
             </ul>
         </nav>
         <button id="toggle-dark-mode">Toggle Dark Mode</button>

@@ -4,9 +4,32 @@ import json
 import trueskill
 from datetime import datetime
 import math
+from math import erf, sqrt
+
+def calculate_win_probability(rating1, rating2):
+    delta_mu = rating1.mu - rating2.mu
+    sum_sigma = rating1.sigma ** 2 + rating2.sigma ** 2
+    x = delta_mu / sqrt(2 * (trueskill.BETA * trueskill.BETA) + sum_sigma)
+    return 0.5 * (1 + erf(x / sqrt(2)))
+    # return stats.norm.cdf(delta_mu / math.sqrt(2 * sum_sigma))
+
+def calculate_win_probability_for_match(match, player_ratings):
+    # Calculate win probability of team
+    team1_ratings = [player_ratings[player['user']['id']] for player in match['players'] if player['team'] == 1]
+    team2_ratings = [player_ratings[player['user']['id']] for player in match['players'] if player['team'] == 2]
+
+    # Calculate average rating using μ - 2σ
+    team1_avg_rating = trueskill.Rating(
+        mu=sum((rating.mu - 2*rating.sigma) for rating in team1_ratings),
+        sigma=sum((rating.sigma**2) for rating in team1_ratings))
+    team2_avg_rating = trueskill.Rating(
+        mu=sum((rating.mu - 2*rating.sigma) for rating in team2_ratings),
+        sigma=sum((rating.sigma**2) for rating in team2_ratings))
+
+    win_prob_team1 = calculate_win_probability(team1_avg_rating, team2_avg_rating)
+    return win_prob_team1
 
 def fetch_data(start_date, end_date, queue):
-        # Select URL and queue filter based on selected queue
     if queue == 'NA':
         url = 'https://sh4z.se/pugstats/naTA.json'
         json_replace = 'datanaTA = '
@@ -16,10 +39,9 @@ def fetch_data(start_date, end_date, queue):
         json_replace = 'datata = '
         queue_filter = 'PUG'
         
-    # Fetch the data
     response = requests.get(url)
 
-    # The content returned by the server is a string, so we need to parse it into a JSON object
+    # Parse conent into a JSON object
     json_content = response.text.replace(json_replace, '')
 
     match = re.search(r'\[.*\]', json_content)
@@ -29,7 +51,7 @@ def fetch_data(start_date, end_date, queue):
     else:
         raise ValueError("No valid JSON data found in response.")
 
-    # Filter for games in the PUG queue, after the start date and before the end date
+    # Filter for games
     game_data = [game for game in game_data 
                  if game['queue']['name'] == queue_filter 
                  and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date]
@@ -37,17 +59,13 @@ def fetch_data(start_date, end_date, queue):
     return game_data
 
 def decay_factor(timestamp, no_decay_period=90, half_life=365):
-    # Current date
+    
     current_date = datetime.now()
-
-    # Game date
     game_date = datetime.fromtimestamp(timestamp / 1000)
-
-    # Calculate the number of days since the game
     days_since_game = (current_date - game_date).days
 
     if days_since_game <= no_decay_period:
-        # No decay within the no_decay_period
+        # No decay
         decay = 1.0
     else:
         # Exponential decay with the given half-life
@@ -56,9 +74,9 @@ def decay_factor(timestamp, no_decay_period=90, half_life=365):
     return decay
 
 def calculate_ratings(game_data):
-    global player_names, player_picks  # Use the global variables
+    global player_names, player_picks 
 
-    # Initialize the TrueSkill environment
+    # Initialize TrueSkill
     ts = trueskill.TrueSkill()
 
     # Initialize the skill ratings for each player who was never a captain
@@ -67,11 +85,8 @@ def calculate_ratings(game_data):
     player_names = {player['user']['id']: player['user']['name'] for match in game_data for player in match['players'] if player['captain'] == 0}
     player_games = {player_id: 0 for player_id in all_player_ids}
 
-
-    # Initialize player pick orders for players who were never captains and when pickOrder is not None
     player_picks = {player_id: [] for player_id in all_player_ids}
 
-    # Process each match
     for match in game_data:
         # Exclude the game if the player was a captain
         match_players = [player for player in match['players'] if player['captain'] == 0]     
@@ -83,6 +98,7 @@ def calculate_ratings(game_data):
 
             # Increment the game count for each player in the match
             player_games[player['user']['id']] += 1
+
         # Create a list of teams and corresponding player ID lists for the TrueSkill rate function
         teams = []
         team_player_ids = []
@@ -92,15 +108,13 @@ def calculate_ratings(game_data):
             teams.append(team)
             team_player_ids.append(player_ids)
 
-        # The teams should be ordered by rank (from best to worst), so we reverse the order if team 2 won
         if match['winningTeam'] == 2:
             teams.reverse()
             team_player_ids.reverse()
 
-        # Update the skill ratings only for non-captain players
         new_ratings = ts.rate(teams, weights=[[decay_factor(match['timestamp'])] * len(team) for team in teams])
 
-        # Store the updated skill ratings only for non-captain players
+        # Store the updated skill ratings
         for i, team in enumerate(teams):
             for j, player_rating in enumerate(team):
                 decay = decay_factor(match['timestamp'])
@@ -110,18 +124,39 @@ def calculate_ratings(game_data):
     # Compute average pick rates
     player_pick_rates = {player_id: sum(picks) / len(picks) if picks else 0 for player_id, picks in player_picks.items()}
 
-    # Modify the bonus function to accept pick order as a parameter
     def bonus(pick_order):
-        # You can modify the coefficients a, b, and c to get the desired bonus values for each pick order
         a = 23
         b = 0.7
         c = 1
         return a * math.exp(-b * pick_order) - c * pick_order
 
-    # Calculate and add the average bonus for each pick order
+    # Calculate final rating
     for player_id, rating in player_ratings.items():
         pick_bonus = sum(bonus(pick) for pick in player_picks[player_id]) / len(player_picks[player_id]) if player_picks[player_id] else 0
         player_ratings[player_id] = trueskill.Rating(mu=rating.mu + pick_bonus, sigma=rating.sigma)
-        
+    
 
     return player_ratings, player_names, player_games
+
+def fetch_match_data(start_date, end_date, queue, player_ratings):
+    
+    game_data = fetch_data(start_date, end_date, queue)
+    sorted_game_data = sorted(game_data, key=lambda game: game['timestamp'], reverse=True)
+
+    match_data = [
+        {
+            'match_id': i+1,
+            'date': datetime.fromtimestamp(game['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M'),
+            'teams': [
+                [player for player in game['players'] if player['team'] == team_number]
+                for team_number in [1, 2]
+            ],
+            'winning_team': game['winningTeam'],
+            'win_probability': calculate_win_probability_for_match(game, player_ratings),
+        }
+        for i, game in enumerate(sorted_game_data)
+    ]
+
+    return match_data
+
+

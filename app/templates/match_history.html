@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='match-history.css') }}">
+{% endblock %}
+
+{% block content %}
+    <table class="controls-table">
+        <tr>
+            <td style="width: 30%;"></td>
+            <td style="width: 40%;">
+                <h2 class="header centered-text">Match History</h2>
+            </td>
+            <td style="width: 10%;"></td> 
+            <td style="width: 20%;">
+                <form method="POST" class="date-picker-form">
+                    <label for="queue">Queue:</label>
+                    <select id="queue" name="queue">
+                        <option value="NA" {% if queue == 'NA' %}selected{% endif %}>NA</option>
+                        <option value="EU" {% if queue == 'EU' %}selected{% endif %}>EU</option>
+                    </select>
+                </form>                
+            </td>          
+        </tr>
+    </table>
+    <div class="table-container">
+        <table>
+            <tr>
+                <th>Match</th>
+                <th>Date</th>
+                <th>Team 1</th>
+                <th>Win Probability</th>
+                <th>Team 2</th>
+            </tr>
+            
+            {% for match in match_data %}
+            <tr>
+                <td>{{ match.index }}</td>
+                <td>{{ match.date }}</td>
+                <td>
+                    <ul class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }}">
+                        {% for player in match.teams[0] %}
+                        <li class="{% if player['captain'] == 1 %}captain{% endif %}">
+                            {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
+                        </li>                        
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <div class="win-prob-container">
+                        <span>{{ (match.win_probability * 100) | round(2) }}%</span>
+                        <div class="win-prob-bar {{ 'team2-favored' if match.win_probability < 0.5 else 'team1-favored' }}">
+                            <div class="team1-prob" style="width: {{ match.win_probability * 100 }}%;"></div>
+                        </div>
+                        <span>{{ (100 - match.win_probability * 100) | round(2) }}%</span>
+                    </div>
+                </td>
+                <td>
+                    <ul class="player-list {{ 'loss' if match.winning_team == 1 else ('win' if match.winning_team == 2 else 'tie') }}">
+                        {% for player in match.teams[1] %}
+                        <li class="{% if player['captain'] == 1 %}captain{% endif %}">
+                            {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
+                        </li>                        
+                        {% endfor %}
+                    </ul>
+                </td>
+                
+            </tr>
+            {% endfor %}   
+        </table>
+    </div>
+{% endblock %}

@@ -1,2 +1,52 @@
 run.bat
-__pycache__
+
+
+# Compiled Python files
+__pycache__/
+*.pyc
+app.db
+
+# Dependency directories
+venv/
+env/
+env*/
+lib/
+libs/
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+*.egg
+
+# Editor files
+*~
+.*.swp
+*.bak
+*.tmp
+
+# Local configuration files
+.env
+.env.*
+*.sqlite3
+*.db
+*.log
+*.bak
+*.ini
+*.cfg
+*.conf
+
+# Other
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pyd
+*.log*
+*.swp

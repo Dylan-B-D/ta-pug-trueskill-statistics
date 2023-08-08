@@ -1,6 +1,6 @@
 :root {
     --bg-color: #ffffff;
-    --text-color: #222222;
+    --text-color: #444444;
     --secondary-color: #f2f2f2; 
     --header-bg-color: #ac6e2d; 
 }
@@ -71,7 +71,7 @@ nav ul li {
 nav ul li a {
     padding: 10px 20px; 
     background-color: var(--text-color); 
-    color: var(--bg-color); 
+    color: var(--secondary-color); 
     text-decoration: none; 
     border-radius: 2px; 
 }
@@ -79,19 +79,35 @@ nav ul li a {
 /* dark mode toggle button */
 #toggle-dark-mode {
     background-color: var(--text-color); 
-    color: var(--bg-color); 
+    color: var(--secondary-color); 
     border: none;
     border-radius: 5px;
     padding: 10px 20px;
     font-weight:600;
     cursor: pointer;
 }
-
+#reset_button{
+    padding: 10px 20px; 
+    background-color: var(--text-color); 
+    color: var(--secondary-color); 
+    text-decoration: none; 
+    border: none;
+    border-radius: 20px 20px 20px 20px;
+    font-weight: 600; 
+    font-size: 0.9em; 
+    transition: background-color 0.3s ease; 
+    min-width: 150px; 
+    text-align: center; 
+    display: inline-block;
+}
+#reset_button:hover{
+    background-color: var(--header-bg-color); 
+}
 /* Style for buttons */
 nav ul li a, #toggle-dark-mode {
     padding: 10px 20px; 
     background-color: var(--text-color); 
-    color: var(--bg-color); 
+    color: var(--secondary-color); 
     text-decoration: none; 
     border: none;
     border-radius: 20px 20px 20px 20px;
@@ -150,10 +166,15 @@ input[type="date"], input[type="submit"] {
 .date-picker-form {
     display: flex;
     align-items: center;
-    margin-left: 32px;
-    margin-top: 0px;
-    margin-bottom: 16px;
+    margin-left: 64px;
     gap: 12px; /* Gap between the items in the form */
+}
+#min_games {
+    margin-left: 12px;
+}
+#min_games:hover {
+    margin-left: 12px;
+    color: var(--bg-color);
 }
 input[type="number"] {
     border: none;
@@ -166,6 +187,47 @@ input[type="number"] {
     transition: background-color 0.3s ease;
     width: 120px;
     text-align: center;
+    -webkit-appearance: textfield; /* Removes spin buttons in Chrome and Safari */
+    -moz-appearance: textfield; /* Removes spin buttons in Firefox */
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"]:hover {
+    background-color: #a56d31; /* Change this to whatever color you want for the hover effect */
 }
 
 
+.controls-table {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 2px;
+    border-radius: 0px 0px 50px 50px;
+    border-style: solid;
+    border-width: 0px 2px 2px 2px;
+    margin-bottom: 16px;
+    background-color: var(--secondary-color);
+}
+
+.controls-table td {
+    padding: 0px;
+    text-align: center;
+    vertical-align: middle;
+}
+select {
+    width: 30%;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #f1f1f1;
+    font-size: 1em;
+}
+
+select:hover {
+    background-color: #a56d31;
+    color: white;
+}

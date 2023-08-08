@@ -5,12 +5,22 @@ import trueskill
 from datetime import datetime
 import math
 
-def fetch_data(start_date, end_date):
+def fetch_data(start_date, end_date, queue):
+        # Select URL and queue filter based on selected queue
+    if queue == 'NA':
+        url = 'https://sh4z.se/pugstats/naTA.json'
+        json_replace = 'datanaTA = '
+        queue_filter = 'PUGz'
+    else:  # EU
+        url = 'https://sh4z.se/pugstats/ta.json'
+        json_replace = 'datata = '
+        queue_filter = 'PUG'
+        
     # Fetch the data
-    response = requests.get('https://sh4z.se/pugstats/naTA.json')
+    response = requests.get(url)
 
     # The content returned by the server is a string, so we need to parse it into a JSON object
-    json_content = response.text.replace('datanaTA = ', '')
+    json_content = response.text.replace(json_replace, '')
 
     match = re.search(r'\[.*\]', json_content)
     if match:
@@ -21,7 +31,7 @@ def fetch_data(start_date, end_date):
 
     # Filter for games in the PUG queue, after the start date and before the end date
     game_data = [game for game in game_data 
-                 if game['queue']['name'] == 'PUGz' 
+                 if game['queue']['name'] == queue_filter 
                  and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date]
 
     return game_data

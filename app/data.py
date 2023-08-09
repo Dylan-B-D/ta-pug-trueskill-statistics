@@ -3,6 +3,7 @@ import re
 import json
 import trueskill
 from datetime import datetime
+from app.player_mappings import player_name_mapping
 import math
 from math import erf, sqrt
 
@@ -55,6 +56,13 @@ def fetch_data(start_date, end_date, queue):
     game_data = [game for game in game_data 
                  if game['queue']['name'] == queue_filter 
                  and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date]
+    
+
+    for match in game_data:
+        for player in match['players']:
+            player_id = player['user']['id']
+            if player_id in player_name_mapping:
+                player['user']['name'] = player_name_mapping[player_id]
 
     return game_data
 

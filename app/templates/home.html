@@ -1,5 +1,38 @@
 {% extends "base.html" %}
-
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+{% endblock %}
 {% block content %}
-    <h2></h2>
+    <div class="content-container">
+        <h2>Info</h2>
+            <p>
+            This is still W.I.P
+            </p>
+            <h3>TrueSkill (TS)</h3>
+            <p>
+                TrueSkill is designed to estimate the skill level of players in multiplayer games. It uses a probabilistic model to predict the outcome of a match and updates player ratings after each game.
+            </p>
+
+            <h3>Mu (μ)</h3>
+            <p>
+                Represents the estimated skill of a player. A higher μ generally indicates a better player. When a player wins a game, μ increases, and when they lose, μ decreases. The magnitude of this change depends on the expected outcome and the uncertainty (σ).
+            </p>
+
+            <h3>Sigma (σ)</h3>
+            <p>
+                Denotes the uncertainty in a player's skill estimation. A new player will have a high σ because the system is unsure of their skill. As a player plays more games, σ decreases, signifying increased confidence in the μ estimation.
+            </p>
+
+            <h3>Adjusted TrueSkill</h3>
+            <p>
+                <strong>Adjusted TS = μ - (2 × σ)</strong>. There is also a pick bonus applied to a players μ, so that players who get picked earlier get a rating boost. This is only so that players with a very high winrate, but lower average pick, do not get very high ratings.
+                There is also a decay factor added, so that more recent games have a larger impact on player rating.
+                
+            </p>
+
+            <h3>Win Chance</h3>
+            <p>
+                This is derived by comparing the Adjusted TrueSkill values of players in each team. The win chance is determined using the average skill ratings (with the formula Adjusted TS = μ - 2σ) of the players in each team.
+            </p>
+    </div>
 {% endblock %}

@@ -1,0 +1,32 @@
+h2 {
+    color: var(--header-bg-color);
+    border-bottom: 3px solid var(--secondary-highlight);
+    padding-bottom: 10px;
+    margin-top: 20px;
+}
+
+p {
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    line-height: 1.5;
+}
+
+h3 {
+    color: var(--secondary-highlight);
+    margin-top: 20px;
+    font-size: 1.5em;
+}
+
+strong {
+    color: var(--text-color);
+    font-weight: bold;
+}
+.content-container {
+    max-width: 800px; /* or any width you prefer */
+    margin: 50px auto; /* vertical space and horizontal auto for centering */
+    padding: 20px;
+    border: 2px solid var(--secondary-highlight);
+    border-radius: 10px;
+    background-color: var(--secondary-color);
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2); /* Optional: Adds a subtle shadow for depth */
+}

@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='rankings.css') }}">
+{% endblock %}
 {% block content %}
     <table class="controls-table">
         <tr>

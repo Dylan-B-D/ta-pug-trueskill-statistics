@@ -1,0 +1,72 @@
+:root {
+    --bg-color: #222222; 
+    --text-color: #dddddd; 
+    --secondary-color: #444444; 
+    --header-bg-color: #507c8b; 
+    --secondary-highlight:#507c8b;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+header {
+    display: flex;
+    justify-content: flex-start;
+    text-shadow: 2px 2px 5px rgb(5, 5, 5);
+    align-items: center;
+    background-color: var(--header-bg-color);
+    padding: 0px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-radius: 0px 0px 10px 10px; 
+    background: linear-gradient(45deg, #143b49 65%, var(--secondary-highlight) 35%);
+}
+
+
+nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: center; 
+}
+nav ul li {
+    margin-left: 2px;
+}
+
+/* Style for buttons */
+nav ul li a {
+    padding: 10px 20px; 
+    background-color: var(--secondary-highlight); 
+    color: var(--text-color); 
+    text-shadow: 2px 2px 5px rgba(24, 24, 24, 0.582);
+    text-decoration: none; 
+    border: none;
+    border-radius: 0;
+    font-weight: 600; 
+    font-size: 0.9em; 
+    transition: background-color 0.3s ease; 
+    min-width: 150px; 
+    text-align: center; 
+    display: inline-block;
+}
+
+/* Style for the leftmost nav button */
+nav ul li:first-child a {
+    border-radius: 8px 0 0 8px;
+}
+
+/* Style for the rightmost nav button */
+nav ul li:last-child a {
+    border-radius: 0 8px 8px 0;
+}
+
+/* Hover effect */
+nav ul li a:hover {
+    filter:grayscale();
+}

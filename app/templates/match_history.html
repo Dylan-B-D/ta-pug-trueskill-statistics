@@ -3,7 +3,6 @@
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='match-history.css') }}">
 {% endblock %}
-
 {% block content %}
     <table class="controls-table">
         <tr>
@@ -26,7 +25,6 @@
     <div class="table-container">
         <table>
             <tr>
-                <th>Match</th>
                 <th>Team 1</th>
                 <th>Match Info</th>
                 <th>Team 2</th>
@@ -34,7 +32,6 @@
             
             {% for match in match_data %}
             <tr>
-                <td>{{ match.index }}</td>
                 <td>
                     <ul class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }}">
                         {% for player in match.teams[0] %}
@@ -44,7 +41,8 @@
                         {% endfor %}
                     </ul>
                 </td>
-                <td>
+                <td class="match-info">
+                    <span class="match-id">ID: {{ match.index }}</span>
                     <div class="date-time-container centered-text">
                         {{ match.date.split()[1] }}<br>  <!-- This assumes the date format is "YYYY-MM-DD HH:MM:SS" -->
                         {{ match.date.split()[0] }}

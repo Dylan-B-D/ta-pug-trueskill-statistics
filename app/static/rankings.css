@@ -1,5 +1,7 @@
 .table-container {
     padding: 0 20%;
+    margin-left: 20%;
+    margin-right: 20%;
 }
 
 table {
@@ -20,10 +22,42 @@ th {
     z-index: 10;
 }
 
-tr:nth-child(even) {
-    background-color: var(--secondary-color);
+
+/* Remove borders and spacing from the table */
+.table-container table {
+    border-collapse: separate; 
+    border-spacing: 0px 4px; /* 10px vertical spacing */
 }
 
+/* Style for the rows */
+.table-container table tr {
+    background-color: transparent; /* Make sure the row itself has a transparent background */
+}
+
+/* Style for the cells */
+.table-container table td, .table-container table th {
+    background-color: rgba(255, 255, 255, 0.123); 
+    padding: 10px;
+}
+.table-container table th {
+    background-color: var(--secondary-highlight);
+}
+.table-container table th:first-child{
+    border-radius: 8px 0px 0px 8px;
+}
+.table-container table th:last-child {
+    border-radius: 0px 8px 8px 0px;
+}
+.table-container table tr td:first-child {
+    border-radius: 8px 0px 0px 8px;
+}
+
+.table-container table tr td:last-child {
+    border-radius: 0px 8px 8px 0px;
+}
+.table-container table tr:hover{
+    background-color: rgb(53, 53, 53);
+}
 .controls-table {
     width: 90%;
     margin-left: auto;
@@ -51,20 +85,26 @@ tr:nth-child(even) {
 
 #min_games {
     margin-left: 12px;
+    border-radius: 8px;
+    color: #444444;
 }
 
 #min_games:hover {
-    margin-left: 12px;
-    color: var(--bg-color);
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
 }
-
+#min_games:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
 input[type="date"], input[type="submit"], input[type="number"] {
     border: none;
     background-color: var(--text-color);
     color: var(--bg-color);
     padding: 8px 8px;
     font-size: 1em;
-    border-radius: 20px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
@@ -81,19 +121,13 @@ input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-
-input[type="number"]:hover {
-    background-color: #a56d31;
-}
-
 #reset_button {
     padding: 10px 20px;
     background-color: var(--text-color);
     color: var(--secondary-color);
     text-decoration: none;
     border: none;
-    border-radius: 20px 20px 20px 20px;
-    font-weight: 600;
+    border-radius: 8px;
     font-size: 0.9em;
     transition: background-color 0.3s ease;
     min-width: 150px;
@@ -102,21 +136,26 @@ input[type="number"]:hover {
 }
 
 #reset_button:hover {
-    background-color: var(--header-bg-color);
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
 }
 
 select {
-    width: 30%;
+    width: 40%;
     padding: 8px 24px;
     border: none;
-    border-radius: 20px;
-    background-color: #f1f1f1;
+    border-radius: 8px;
+    color: #444444;
+    background-color: rgba(255, 255, 255, 0.85);
     font-size: 1em;
 }
-
 select:hover {
-    background-color: #a56d31;
-    color: white;
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+select:focus {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
 }
 
 .table-container {

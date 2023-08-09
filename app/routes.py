@@ -1,7 +1,8 @@
-from flask import render_template, request
+from flask import render_template, request, jsonify
 from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill
 from datetime import datetime
 from app import app
+from app.player_mappings import player_name_mapping
 
 
 @app.route('/')
@@ -70,9 +71,18 @@ def match_history():
     else:
         queue = request.args.get('queue', 'NA')
     
+    # We get player ratings first since it's needed for both match_data and filtering
     game_data = fetch_data(start_date, end_date, queue)
     player_ratings, player_names, player_games = calculate_ratings(game_data)
+    
+    # Fetch match data directly
     match_data = fetch_match_data(start_date, end_date, queue, player_ratings)
+    
+    player_name = request.args.get('player_search', None)
+    print(f"Searching for player: {player_name}")
+    if player_name:
+        # Filter match_data instead of game_data
+        match_data = [match for match in match_data if any(player['user']['name'] == player_name for team in match['teams'] for player in team)]
 
     match_data = augment_match_data_with_trueskill(match_data, player_ratings)
 
@@ -80,5 +90,13 @@ def match_history():
     for idx, match in enumerate(reversed(match_data), start=1):
         match['index'] = idx
 
-    return render_template('match_history.html', match_data=match_data, queue=queue)
+    return render_template('match_history.html', match_data=match_data, queue=queue, player_name=player_name)
+
+
+
+@app.route('/autocomplete_player')
+def autocomplete_player():
+    term = request.args.get('term', '')
+    matching_players = [name for id, name in player_name_mapping.items() if term.lower() in name.lower()]
+    return jsonify(matching_players)
 

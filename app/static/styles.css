@@ -220,9 +220,9 @@ input[type="number"]:hover {
 }
 select {
     width: 30%;
-    padding: 5px 10px;
+    padding: 8px 24px;
     border: none;
-    border-radius: 4px;
+    border-radius: 20px;
     background-color: #f1f1f1;
     font-size: 1em;
 }
@@ -279,6 +279,7 @@ select:hover {
     position: relative;
     margin-left: 8px;
     margin-right: 8px;
+    box-shadow: 0 0 10px 5px #0000002c;
 }
 
 .team1-prob {
@@ -308,5 +309,20 @@ select:hover {
     left: 50%;
     z-index: 2;
 }
+.stats-container.left {
+    float: left;
+    margin-bottom: 20px;
+}
 
+.stats-container.right {
+    float: right;
+    text-align: right;
+    margin-bottom: 20px;
+}
+.date-time-container.centered-text{
+    font-weight: bold;
+}
 
+.date-time-container {
+    margin-bottom: 12px;
+}

@@ -159,4 +159,20 @@ def fetch_match_data(start_date, end_date, queue, player_ratings):
 
     return match_data
 
+def augment_match_data_with_trueskill(match_data, player_ratings):
+    for match in match_data:
+        team1_ratings = [player_ratings[player['user']['id']] for player in match['teams'][0]]
+        team2_ratings = [player_ratings[player['user']['id']] for player in match['teams'][1]]
+
+        # Calculate average mu and sigma for each team
+        match['team1_avg_mu'] = sum(rating.mu for rating in team1_ratings) / len(team1_ratings)
+        match['team1_avg_sigma'] = sum(rating.sigma for rating in team1_ratings) / len(team1_ratings)
+        match['team2_avg_mu'] = sum(rating.mu for rating in team2_ratings) / len(team2_ratings)
+        match['team2_avg_sigma'] = sum(rating.sigma for rating in team2_ratings) / len(team2_ratings)
+
+        # Calculate average TrueSkill (mu - 2*sigma) for each team
+        match['team1_avg_trueskill'] = sum((rating.mu - 2*rating.sigma) for rating in team1_ratings) / len(team1_ratings)
+        match['team2_avg_trueskill'] = sum((rating.mu - 2*rating.sigma) for rating in team2_ratings) / len(team2_ratings)
+    
+    return match_data
 

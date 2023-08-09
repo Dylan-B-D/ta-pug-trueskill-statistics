@@ -15,11 +15,11 @@
             <td style="width: 20%;">
                 <form method="POST" class="date-picker-form">
                     <label for="queue">Queue:</label>
-                    <select id="queue" name="queue">
+                    <select id="queue" name="queue" onchange="this.form.submit()">
                         <option value="NA" {% if queue == 'NA' %}selected{% endif %}>NA</option>
                         <option value="EU" {% if queue == 'EU' %}selected{% endif %}>EU</option>
                     </select>
-                </form>                
+                </form>                               
             </td>          
         </tr>
     </table>
@@ -27,16 +27,14 @@
         <table>
             <tr>
                 <th>Match</th>
-                <th>Date</th>
                 <th>Team 1</th>
-                <th>Win Probability</th>
+                <th>Match Info</th>
                 <th>Team 2</th>
             </tr>
             
             {% for match in match_data %}
             <tr>
                 <td>{{ match.index }}</td>
-                <td>{{ match.date }}</td>
                 <td>
                     <ul class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }}">
                         {% for player in match.teams[0] %}
@@ -47,12 +45,26 @@
                     </ul>
                 </td>
                 <td>
+                    <div class="date-time-container centered-text">
+                        {{ match.date.split()[1] }}<br>  <!-- This assumes the date format is "YYYY-MM-DD HH:MM:SS" -->
+                        {{ match.date.split()[0] }}
+                    </div>
+                    <div class="stats-container left">
+                        ts: <span {% if match['team1_avg_trueskill'] > match['team2_avg_trueskill'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_trueskill']) }}</span><br>
+                        μ: <span {% if match['team1_avg_mu'] > match['team2_avg_mu'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_mu']) }}</span><br>
+                        σ: <span {% if match['team1_avg_sigma'] < match['team2_avg_sigma'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_sigma']) }}</span>
+                    </div>
+                    <div class="stats-container right">
+                        <span {% if match['team2_avg_trueskill'] > match['team1_avg_trueskill'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_trueskill']) }}</span> :ts<br>
+                        <span {% if match['team2_avg_mu'] > match['team1_avg_mu'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_mu']) }}</span> :μ<br>
+                        <span {% if match['team2_avg_sigma'] < match['team1_avg_sigma'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_sigma']) }}</span> :σ
+                    </div>
                     <div class="win-prob-container">
-                        <span>{{ (match.win_probability * 100) | round(2) }}%</span>
+                        <span {% if match.win_probability > 0.5 %}style="font-weight: bold;"{% endif %}>{{ (match.win_probability * 100) | round(2) }}%</span>
                         <div class="win-prob-bar {{ 'team2-favored' if match.win_probability < 0.5 else 'team1-favored' }}">
                             <div class="team1-prob" style="width: {{ match.win_probability * 100 }}%;"></div>
                         </div>
-                        <span>{{ (100 - match.win_probability * 100) | round(2) }}%</span>
+                        <span {% if match.win_probability <= 0.5 %}style="font-weight: bold;"{% endif %}>{{ (100 - match.win_probability * 100) | round(2) }}%</span>
                     </div>
                 </td>
                 <td>
@@ -66,7 +78,8 @@
                 </td>
                 
             </tr>
-            {% endfor %}   
+            {% endfor %}
+            
         </table>
     </div>
 {% endblock %}

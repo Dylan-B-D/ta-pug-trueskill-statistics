@@ -1,5 +1,5 @@
 from flask import render_template, request
-from app.data import fetch_data, calculate_ratings, fetch_match_data
+from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill
 from datetime import datetime
 from app import app
 
@@ -60,18 +60,25 @@ def rankings():
 
     return render_template('rankings.html', player_list=player_list, start_date=start_date_str, end_date=end_date_str, min_games=min_games, queue=queue)
 
-@app.route('/match_history', methods=['GET'])
+@app.route('/match_history', methods=['GET', 'POST'])
 def match_history():
     start_date = datetime(2018, 11, 1)
     end_date = datetime.now()
-    queue = "NA"
+    
+    if request.method == 'POST':
+        queue = request.form.get('queue', 'NA')
+    else:
+        queue = request.args.get('queue', 'NA')
+    
     game_data = fetch_data(start_date, end_date, queue)
     player_ratings, player_names, player_games = calculate_ratings(game_data)
     match_data = fetch_match_data(start_date, end_date, queue, player_ratings)
 
-    
+    match_data = augment_match_data_with_trueskill(match_data, player_ratings)
+
     # Set match index starting from the oldest
     for idx, match in enumerate(reversed(match_data), start=1):
         match['index'] = idx
 
-    return render_template('match_history.html', match_data=match_data)
+    return render_template('match_history.html', match_data=match_data, queue=queue)
+

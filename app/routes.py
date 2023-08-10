@@ -61,7 +61,7 @@ def rankings():
 
     return render_template('rankings.html', player_list=player_list, start_date=start_date_str, end_date=end_date_str, min_games=min_games, queue=queue)
 
-@app.route('/match_history', methods=['GET', 'POST'])
+@app.route('/match-history', methods=['GET', 'POST'])
 def match_history():
     start_date = datetime(2018, 11, 1)
     end_date = datetime.now()
@@ -90,8 +90,31 @@ def match_history():
     for idx, match in enumerate(reversed(match_data), start=1):
         match['index'] = idx
 
-    return render_template('match_history.html', match_data=match_data, queue=queue, player_name=player_name)
+    return render_template('match-history.html', match_data=match_data, queue=queue, player_name=player_name)
 
+@app.route('/team-calculator', methods=['GET', 'POST'])
+def team_calculator():
+    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')  # Adjust as needed
+    player_ratings, player_names, _ = calculate_ratings(game_data)
+    sorted_player_ids = sorted(player_ratings, key=lambda x: player_ratings[x].mu - 2*player_ratings[x].sigma, reverse=True)
+    # If a search query is provided, filter the player list
+    query = request.form.get('search_query', '').lower()
+    player_list = [
+        {
+            "id": player_id,
+            "rank": i+1,
+            "name": player_names[player_id],
+            "trueskill": f"{player_ratings[player_id].mu - 2*player_ratings[player_id].sigma:.2f}",
+            "mu": f"{player_ratings[player_id].mu:.1f}",
+            "sigma": f"{player_ratings[player_id].sigma:.1f}",
+        }
+        for i, player_id in enumerate(sorted_player_ids)
+    ]
+
+    # Sort the player list by trueskill rating
+    player_list.sort(key=lambda x: float(x['trueskill']), reverse=True)
+
+    return render_template('team-calculator.html', player_list=player_list)
 
 
 @app.route('/autocomplete_player')

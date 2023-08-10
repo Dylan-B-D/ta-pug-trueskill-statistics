@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='team-calculator.css') }}">
+{% endblock %}
+{% block content %}
+    <table class="controls-table">
+        <tr>
+            <td style="width: 20%;">
+                <form method="POST" class="player-search-form">
+                    <input type="text" id="player_search" name="search_query" placeholder="Search for a player" value="{{ request.form['search_query'] }}">
+                </form>         
+            </td>
+            <td style="width: 40%;">
+                <h2 class="header centered-text">Team Calculator</h2>
+            </td>
+            <td style="width: 20%;">
+                <td style="width: 20%;">
+                    <button id="move_to_team1" class="move-button">Move to Team 1</button>
+                    <button id="move_to_team2" class="move-button">Move to Team 2</button>
+                </td>
+            </td> 
+            <td style="width: 20%;">
+                            
+            </td>          
+        </tr>
+    </table>
+    <div class="main-wrapper">
+        <div class="table-container">
+            ----------------Work in progress  (not functional yet)-----------------
+            <table>
+                <tr>
+                    <th style="width: 10%;">Rank</th>
+                    <th style="width: 40%;">Player Name</th>
+                    <th style="width: 15%;">Trueskill</th>
+                    <th style="width: 15%;">μ</th>
+                    <th style="width: 15%;">σ</th>
+                </tr>
+                {% for player in player_list %}
+                    <tr>
+                        <td>{{ player.rank }}</td>
+                        <td>{{ player.name }}</td>
+                        <td>{{ player.trueskill }}</td>
+                        <td>{{ player.mu }}</td>
+                        <td>{{ player.sigma }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="team-wrapper">
+            <div class="team-container" id="team1">
+                <div class="team-heading">Team 1</div>
+            </div>
+            <div class="team-container" id="team2">
+                <div class="team-heading">Team 2</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function() {
+            // Attach keyup event to the search input
+            $('#player_search').on('keyup', function() {
+                // Get the current value of the search input
+                let value = $(this).val().toLowerCase();
+                
+                // Filter the table rows based on the input value
+                $('table tr').not(':first').filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+    
+            // Toggle row selection when a table row is clicked
+            $('table tr').not(':first').on('click', function() {
+                $(this).toggleClass('selected');
+            });
+    
+            function moveToTeam(teamId) {
+                // Get all selected rows
+                const selectedRows = $('table tr.selected');
+    
+                // For each selected row, move its data to the team container
+                selectedRows.each(function() {
+                    const playerName = $(this).find('td:nth-child(2)').text();
+                    const playerTrueskill = $(this).find('td:nth-child(3)').text();
+    
+                    // Create a new element for the player in the team container
+                    const playerElement = `<div>${playerName} - ${playerTrueskill}</div>`;
+    
+                    // Append the player to the team container
+                    $(`#${teamId}`).append(playerElement);
+    
+                    // Remove the original row from the table
+                    $(this).remove();
+                });
+            }
+    
+            // Attach event handlers to the move buttons
+            $('#move_to_team1').on('click', function() {
+                moveToTeam('team1');
+            });
+    
+            $('#move_to_team2').on('click', function() {
+                moveToTeam('team2');
+            });
+        });
+    </script>
+{% endblock %}
+

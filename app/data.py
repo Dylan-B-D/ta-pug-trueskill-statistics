@@ -9,6 +9,7 @@ from math import erf, sqrt
 
 player_games = {}
 
+
 def calculate_win_probability(rating1, rating2):
     delta_mu = rating1.mu - rating2.mu
     sum_sigma = rating1.sigma ** 2 + rating2.sigma ** 2
@@ -185,11 +186,4 @@ def augment_match_data_with_trueskill(match_data, player_ratings):
         match['team2_avg_trueskill'] = sum((rating.mu - 2*rating.sigma) for rating in team2_ratings) / len(team2_ratings)
     
     return match_data
-
-def get_player_game_count(player_name):
-    # Get the player's ID from the name
-    player_id = next((key for key, value in player_name_mapping.items() if value == player_name), None)
-    
-    # If the player ID is found in the player_games dictionary, return the game count. Otherwise, return 0.
-    return player_games.get(player_id, 0)
 

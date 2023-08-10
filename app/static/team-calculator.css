@@ -1,0 +1,273 @@
+.table-container {
+    padding: 0 20%;
+    margin-left: 20%;
+    margin-right: 20%;
+}
+
+table {
+    width: 100%;
+}
+
+th, td {
+    text-align: left;
+    padding: 8px;
+}
+
+th {
+    background-color: var(--secondary-highlight);
+    color: white;
+    font-weight: bold;
+    position: sticky;
+    top: 0px;
+    z-index: 10;
+}
+
+
+/* Remove borders and spacing from the table */
+.table-container table {
+    border-collapse: separate; 
+    border-spacing: 0px 4px; /* 10px vertical spacing */
+}
+
+/* Style for the rows */
+.table-container table tr {
+    background-color: transparent; /* Make sure the row itself has a transparent background */
+}
+
+/* Style for the cells */
+.table-container table td, .table-container table th {
+    background-color: rgba(255, 255, 255, 0.123); 
+    padding: 10px;
+}
+.table-container table th {
+    background-color: var(--secondary-highlight);
+}
+.table-container table th:first-child{
+    border-radius: 8px 0px 0px 8px;
+}
+.table-container table th:last-child {
+    border-radius: 0px 8px 8px 0px;
+}
+.table-container table tr td:first-child {
+    border-radius: 8px 0px 0px 8px;
+}
+
+.table-container table tr td:last-child {
+    border-radius: 0px 8px 8px 0px;
+}
+.table-container table tr:hover{
+    background-color: rgb(53, 53, 53);
+}
+table tr.selected {
+    background-color: #17572a; /* Change this color to whatever you like */
+}
+table tr.selected:hover {
+    background-color: #177433; /* Change this color to whatever you like */
+}
+.controls-table {
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    border: 2px;
+    border-radius: 0px 0px 50px 50px;
+    border-style: solid;
+    border-width: 0px 2px 2px 2px;
+    margin-bottom: 16px;
+    background-color: var(--secondary-color);
+}
+
+.controls-table td {
+    padding: 0px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.date-picker-form {
+    display: flex;
+    align-items: center;
+    margin-left: 64px;
+    gap: 12px;
+}
+
+#min_games {
+    margin-left: 12px;
+    border-radius: 8px;
+    color: #444444;
+}
+
+#min_games:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+#min_games:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+input[type="date"], input[type="submit"], input[type="number"] {
+    border: none;
+    background-color: var(--text-color);
+    color: var(--bg-color);
+    padding: 8px 8px;
+    font-size: 1em;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+input[type="number"] {
+    width: 120px;
+    text-align: center;
+    -webkit-appearance: textfield; /* Removes spin buttons in Chrome and Safari */
+    -moz-appearance: textfield; /* Removes spin buttons in Firefox */
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+#reset_button {
+    padding: 10px 20px;
+    background-color: var(--text-color);
+    color: var(--secondary-color);
+    text-decoration: none;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+    min-width: 150px;
+    text-align: center;
+    display: inline-block;
+}
+
+#reset_button:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+
+select {
+    width: 40%;
+    padding: 8px 24px;
+    border: none;
+    border-radius: 8px;
+    color: #444444;
+    background-color: rgba(255, 255, 255, 0.85);
+    font-size: 1em;
+}
+select:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+select:focus {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+
+.table-container {
+    padding-left: 10%;
+    padding-right: 10%;
+}
+#player_search {
+    padding: 10px;
+    border: 0px solid #ccc;
+    background-color: rgba(255, 255, 255, 0.781);
+    color: #2b2b2b;
+    border-radius: 8px;
+    font-size: 16px;
+    width: 40%; 
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#player_search:focus {
+    outline: none;
+    border-color: #aaa;
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+#player_search:hover {
+    outline: none;
+    border-color: #aaa;
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
+
+table tr {
+    -webkit-user-select: none;  /* Chrome, Safari, and Opera */
+    -moz-user-select: none;     /* Firefox */
+    -ms-user-select: none;      /* Internet Explorer/Edge */
+    user-select: none;          /* Non-prefixed version, currently supported by Chrome, Edge, Opera, and Firefox */
+}
+.selected {
+    background-color: #d1e7dd; /* Change this color as per your preference for a selected row */
+}
+
+.team-container {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 20px 0;
+    min-height: 150px;
+}
+
+.team-heading {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+}
+
+.selected {
+    background-color: #f5f5f5;
+}
+.team-wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+.main-wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+.table-container {
+    flex: 1; /* Adjusted the flex ratio */
+    overflow-x: auto;
+}
+
+.team-wrapper {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex: 1.5; /* Adjusted the flex ratio */
+    margin-left: 20px; 
+}
+
+.team-container {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin: 20px 0;
+    width: 200px; 
+    max-height: 300px; 
+    overflow-y: auto;
+}
+
+.team-heading {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+}
+
+.reset-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 8px 15px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.reset-button:hover {
+    background-color: #e0e0e0;
+}
+
+.selected {
+    background-color: #f5f5f5;
+}
+
+
+

@@ -3,9 +3,13 @@ from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_ma
 from datetime import datetime
 from app import app
 from app.player_mappings import player_name_mapping
-
+from flask import redirect
 
 @app.route('/')
+def root():
+    return redirect('/trueskill', code=302)
+
+@app.route('/trueskill')
 def home():
     return render_template('home.html')
 

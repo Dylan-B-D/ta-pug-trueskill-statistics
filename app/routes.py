@@ -1,5 +1,5 @@
 from flask import render_template, request, jsonify
-from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill
+from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill, calculate_win_probability_for_match
 from datetime import datetime
 from app import app
 from app.player_mappings import player_name_mapping
@@ -92,12 +92,15 @@ def match_history():
 
     return render_template('match-history.html', match_data=match_data, queue=queue, player_name=player_name)
 
+player_ratings_global = {}
+
 @app.route('/team-calculator', methods=['GET', 'POST'])
 def team_calculator():
-    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')  # Adjust as needed
+    global player_ratings_global
+    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')
     player_ratings, player_names, _ = calculate_ratings(game_data)
     sorted_player_ids = sorted(player_ratings, key=lambda x: player_ratings[x].mu - 2*player_ratings[x].sigma, reverse=True)
-    # If a search query is provided, filter the player list
+    player_ratings_global = player_ratings
     query = request.form.get('search_query', '').lower()
     player_list = [
         {
@@ -110,11 +113,36 @@ def team_calculator():
         }
         for i, player_id in enumerate(sorted_player_ids)
     ]
-
-    # Sort the player list by trueskill rating
     player_list.sort(key=lambda x: float(x['trueskill']), reverse=True)
+    
+    match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), 'NA', player_ratings)
+    player_name = request.args.get('player_search', None)
 
-    return render_template('team-calculator.html', player_list=player_list)
+    if player_name:
+        match_data = [match for match in match_data if any(player['user']['name'] == player_name for team in match['teams'] for player in team)]
+
+    match_data = augment_match_data_with_trueskill(match_data, player_ratings)
+    last_match = match_data[0] if match_data else None
+
+    return render_template('team-calculator.html', player_list=player_list, match_data=[last_match])
+
+@app.route('/calculate_probability', methods=['POST'])
+def calculate_probability():
+    global player_ratings_global  # Declare the variable as global
+    
+    team1_ids = request.form.getlist('team1[]')
+    team2_ids = request.form.getlist('team2[]')
+
+    pseudo_match = {
+        'players': [
+            {'user': {'id': int(player_id)}, 'team': 1} for player_id in team1_ids
+        ] + [
+            {'user': {'id': int(player_id)}, 'team': 2} for player_id in team2_ids
+        ]
+    }
+
+    win_probability_team1 = calculate_win_probability_for_match(pseudo_match, player_ratings_global)
+    return jsonify(win_probability=round(win_probability_team1 * 100, 2))
 
 
 @app.route('/autocomplete_player')

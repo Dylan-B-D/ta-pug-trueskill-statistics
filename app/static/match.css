@@ -1,0 +1,139 @@
+
+.match-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+    padding: 32px;
+    margin-right: 5%;
+}
+table tr td {
+    padding-top: 10px; 
+    padding-bottom: 10px; 
+}
+
+.match-info {
+    padding-left: 32px;
+    padding-right: 32px;
+    position: relative;
+}
+.match-id {
+    position: absolute;
+    top: 40px; 
+    right: 32px;
+    color: rgba(255, 255, 255, 0.3);
+}
+.match-container table {
+    border-collapse: separate; 
+    border-spacing: 0 10px;
+}
+.match-container table tr {
+    background-color: transparent;
+}
+.match-container table td, .match-container table th {
+    background-color: rgba(255, 255, 255, 0.123); 
+    padding: 10px;
+}
+.match-container table th {
+    background-color: var(--secondary-highlight);
+}
+.match-container table th:first-child {
+    border-radius: 10px 0px 0px 10px;
+}
+.match-container table th:last-child {
+    border-radius: 0px 10px 10px 0px;
+}
+.match-container table tr td:first-child {
+    border-radius: 10px 0px 0px 10px;
+}
+.match-container table tr td:last-child {
+    border-radius: 0px 10px 10px 0px;
+}
+
+/* Win Probability Bar */
+.win-prob-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 260px;
+    margin-left: 0px;
+    width: 100%;
+}
+.win-prob-bar {
+    width: 100%;
+    height: 12px;
+    border-radius: 4px;
+    background-color: #dd938c;
+    position: relative;
+    margin-left: 8px;
+    margin-right: 8px;
+    box-shadow: 0 0 10px 5px #0000002c;
+}
+.team1-prob {
+    height: 100%;
+    border-radius: 4px 0px 0px 4px;
+    background-color: #8de79c;
+}
+.win-prob-bar.team2-favored {
+    background-color: #8de79c;
+}
+.win-prob-bar.team2-favored .team1-prob {
+    background-color: #dd938c;
+}
+.win-prob-bar::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: #333;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 50%;
+    z-index: 2;
+}
+
+.stats-container.left {
+    float: left;
+    margin-bottom: 20px;
+}
+.stats-container.right {
+    float: right;
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.date-time-container.centered-text {
+    color: rgba(255, 255, 255, 0.3);
+}
+.date-time-container {
+    margin-bottom: 12px;
+}
+
+/* Player Lists */
+.match-container ul {
+    list-style-type: none;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+    border-radius: 10px;
+    color:#444444;
+    box-shadow: 0 0 10px 5px #00000041;
+}
+.match-container ul.win {
+    background-color: #8de79cc4;  
+}
+.match-container ul.loss {
+    background-color: #ffbbb3b9; 
+}
+.match-container ul.tie {
+    background-color: #fffeb6;  
+}
+.match-container li {
+    margin-bottom: 4px;
+    position: relative;
+}
+.match-container li.captain {
+    font-weight: bold;
+}
+
+

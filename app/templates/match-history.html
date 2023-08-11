@@ -1,100 +1,100 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='match-history.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/match-history.css') }}">
 {% endblock %}
 {% block content %}
-    <table class="controls-table">
+<table class="controls-table">
+    <tr>
+        <td style="width: 30%;">
+            <form method="GET" action="{{ url_for('match_history') }}" class="player-search-form">
+                <input type="text" id="player_search" placeholder="{{ player_name or 'Search for player' }}" />
+            </form>
+        </td>
+        <td style="width: 40%;">
+            <h2 class="header centered-text">Match History</h2>
+        </td>
+        <td style="width: 10%;"></td>
+        <td style="width: 20%;">
+            <form method="POST" class="date-picker-form">
+                <select id="queue" name="queue" onchange="this.form.submit()">
+                    <option value="NA" {% if queue=='NA' %}selected{% endif %}>NA</option>
+                    <option value="EU" {% if queue=='EU' %}selected{% endif %}>EU</option>
+                </select>
+            </form>
+        </td>
+    </tr>
+</table>
+<div class="table-container">
+    <table>
         <tr>
-            <td style="width: 30%;">
-                <form method="GET" action="{{ url_for('match_history') }}" class="player-search-form">
-                    <input type="text" id="player_search" placeholder="{{ player_name or 'Search for player' }}" />
-                </form>                
-            </td>
-            <td style="width: 40%;">
-                <h2 class="header centered-text">Match History</h2>
-            </td>
-            <td style="width: 10%;"></td> 
-            <td style="width: 20%;">
-                <form method="POST" class="date-picker-form">
-                    <select id="queue" name="queue" onchange="this.form.submit()">
-                        <option value="NA" {% if queue == 'NA' %}selected{% endif %}>NA</option>
-                        <option value="EU" {% if queue == 'EU' %}selected{% endif %}>EU</option>
-                    </select>
-                </form>                               
-            </td>          
+            <th>Team 1</th>
+            <th>Match Info</th>
+            <th>Team 2</th>
         </tr>
+
+        {% for match in match_data %}
+        <tr>
+            <td>
+                <ul
+                    class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }}">
+                    {% for player in match.teams[0] %}
+                    <li class="{% if player['captain'] == 1 %}captain{% endif %}">
+                        {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td class="match-info">
+                <span class="match-id">ID: {{ match.index }}</span>
+                <div class="date-time-container centered-text">
+                    {{ match.date.split()[1] }}<br> <!-- This assumes the date format is "YYYY-MM-DD HH:MM:SS" -->
+                    {{ match.date.split()[0] }}
+                </div>
+                <div class="stats-container left">
+                    ts: <span {% if match['team1_avg_trueskill']> match['team2_avg_trueskill'] %}style="font-weight:
+                        bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_trueskill']) }}</span><br>
+                    μ: <span {% if match['team1_avg_mu']> match['team2_avg_mu'] %}style="font-weight: bold;"{% endif
+                        %}>{{ "%.2f"|format(match['team1_avg_mu']) }}</span><br>
+                    σ: <span {% if match['team1_avg_sigma'] < match['team2_avg_sigma'] %}style="font-weight: bold;" {%
+                        endif %}>{{ "%.2f"|format(match['team1_avg_sigma']) }}</span>
+                </div>
+                <div class="stats-container right">
+                    <span {% if match['team2_avg_trueskill']> match['team1_avg_trueskill'] %}style="font-weight:
+                        bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_trueskill']) }}</span> :ts<br>
+                    <span {% if match['team2_avg_mu']> match['team1_avg_mu'] %}style="font-weight: bold;"{% endif %}>{{
+                        "%.2f"|format(match['team2_avg_mu']) }}</span> :μ<br>
+                    <span {% if match['team2_avg_sigma'] < match['team1_avg_sigma'] %}style="font-weight: bold;" {%
+                        endif %}>{{ "%.2f"|format(match['team2_avg_sigma']) }}</span> :σ
+                </div>
+                <div class="win-prob-container">
+                    <span {% if match.win_probability> 0.5 %}style="font-weight: bold;"{% endif %}>{{
+                        (match.win_probability * 100) | round(2) }}%</span>
+                    <div class="win-prob-bar {{ 'team2-favored' if match.win_probability < 0.5 else 'team1-favored' }}">
+                        <div class="team1-prob" style="width: {{ match.win_probability * 100 }}%;"></div>
+                    </div>
+                    <span {% if match.win_probability <=0.5 %}style="font-weight: bold;" {% endif %}>{{ (100 -
+                        match.win_probability * 100) | round(2) }}%</span>
+                </div>
+            </td>
+            <td>
+                <ul
+                    class="player-list {{ 'loss' if match.winning_team == 1 else ('win' if match.winning_team == 2 else 'tie') }}">
+                    {% for player in match.teams[1] %}
+                    <li class="{% if player['captain'] == 1 %}captain{% endif %}">
+                        {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </td>
+
+        </tr>
+        {% endfor %}
+
     </table>
-    <div class="table-container">
-        <table>
-            <tr>
-                <th>Team 1</th>
-                <th>Match Info</th>
-                <th>Team 2</th>
-            </tr>
-            
-            {% for match in match_data %}
-            <tr>
-                <td>
-                    <ul class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }}">
-                        {% for player in match.teams[0] %}
-                        <li class="{% if player['captain'] == 1 %}captain{% endif %}">
-                            {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
-                        </li>                        
-                        {% endfor %}
-                    </ul>
-                </td>
-                <td class="match-info">
-                    <span class="match-id">ID: {{ match.index }}</span>
-                    <div class="date-time-container centered-text">
-                        {{ match.date.split()[1] }}<br>  <!-- This assumes the date format is "YYYY-MM-DD HH:MM:SS" -->
-                        {{ match.date.split()[0] }}
-                    </div>
-                    <div class="stats-container left">
-                        ts: <span {% if match['team1_avg_trueskill'] > match['team2_avg_trueskill'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_trueskill']) }}</span><br>
-                        μ: <span {% if match['team1_avg_mu'] > match['team2_avg_mu'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_mu']) }}</span><br>
-                        σ: <span {% if match['team1_avg_sigma'] < match['team2_avg_sigma'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team1_avg_sigma']) }}</span>
-                    </div>
-                    <div class="stats-container right">
-                        <span {% if match['team2_avg_trueskill'] > match['team1_avg_trueskill'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_trueskill']) }}</span> :ts<br>
-                        <span {% if match['team2_avg_mu'] > match['team1_avg_mu'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_mu']) }}</span> :μ<br>
-                        <span {% if match['team2_avg_sigma'] < match['team1_avg_sigma'] %}style="font-weight: bold;"{% endif %}>{{ "%.2f"|format(match['team2_avg_sigma']) }}</span> :σ
-                    </div>
-                    <div class="win-prob-container">
-                        <span {% if match.win_probability > 0.5 %}style="font-weight: bold;"{% endif %}>{{ (match.win_probability * 100) | round(2) }}%</span>
-                        <div class="win-prob-bar {{ 'team2-favored' if match.win_probability < 0.5 else 'team1-favored' }}">
-                            <div class="team1-prob" style="width: {{ match.win_probability * 100 }}%;"></div>
-                        </div>
-                        <span {% if match.win_probability <= 0.5 %}style="font-weight: bold;"{% endif %}>{{ (100 - match.win_probability * 100) | round(2) }}%</span>
-                    </div>
-                </td>
-                <td>
-                    <ul class="player-list {{ 'loss' if match.winning_team == 1 else ('win' if match.winning_team == 2 else 'tie') }}">
-                        {% for player in match.teams[1] %}
-                        <li class="{% if player['captain'] == 1 %}captain{% endif %}">
-                            {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
-                        </li>                        
-                        {% endfor %}
-                    </ul>
-                </td>
-                
-            </tr>
-            {% endfor %}
-            
-        </table>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script>
-        $(document).ready(function(){
-            $( "#player_search" ).autocomplete({
-                source: "/autocomplete_player",
-                minLength: 1,
-                select: function(event, ui) {
-                    window.location.href = "/match-history?player_search=" + ui.item.value;
-                }
-            });
-        });
-    </script>
+</div>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="{{ url_for('static', filename='js/match-history.js') }}"></script>
 {% endblock %}

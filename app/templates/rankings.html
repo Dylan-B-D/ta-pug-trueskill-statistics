@@ -1,106 +1,63 @@
 {% extends "base.html" %}
 
 {% block head %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='rankings.css') }}">
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='rankings.css') }}">
 {% endblock %}
 {% block content %}
-    <table class="controls-table">
-        <tr>
-            <td style="width: 20%;">
-                <form method="POST" class="date-picker-form">
-                    <label for="start_date">From</label>
-                    <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
-                    <label for="end_date">To</label>
-                    <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
-                    <button id="reset_button">Reset</button>
-                </form>          
-            </td>
-            <td style="width: 40%;">
-                <h2 class="header centered-text">Trueskill Rankings</h2>
-            </td>
-            <td style="width: 20%;">
-                <form method="POST" id="min-games-form">
-                    <label for="min_games">Min games    </label>
-                    <input type="number" id="min_games" name="min_games" value="{{ min_games }}" placeholder="{{ min_games }}">
-                </form>                
-            </td> 
-            <td style="width: 20%;">
-                <form method="POST" class="date-picker-form">
-                    <select id="queue" name="queue">
-                        <option value="NA" {% if queue == 'NA' %}selected{% endif %}>NA</option>
-                        <option value="EU" {% if queue == 'EU' %}selected{% endif %}>EU</option>
-                    </select>
-                </form>                
-            </td>          
-        </tr>
-    </table>
-    <div class="table-container">
-        <div class="table-wrapper">
-            <table>
-                <tr>
-                    <th style="width: 10%;">Rank</th>
-                    <th style="width: 40%;">Player Name</th>
-                    <th style="width: 15%;">Trueskill</th>
-                    <th style="width: 15%;">μ</th>
-                    <th style="width: 15%;">σ</th>
-                </tr>
-                {% for player in player_list %}
-                    <tr>
-                        <td>{{ player.rank }}</td>
-                        <td>{{ player.name }}</td>
-                        <td>{{ player.trueskill }}</td>
-                        <td>{{ player.mu }}</td>
-                        <td>{{ player.sigma }}</td>
-                    </tr>
-                {% endfor %}
-            </table>
-        </div>
-    </div> 
-    <script>
-        window.onload = function() {
-            // Attach "change" event listener to the date input fields
-            document.getElementById("start_date").addEventListener("blur", autoSubmit);
-            document.getElementById("end_date").addEventListener("blur", autoSubmit);
-    
-        
-            // Attach "click" event listener to the reset button
-            document.getElementById("reset_button").addEventListener("click", resetDates);
-        
-            function autoSubmit() {
-                // Submit the form when the value in the date picker is changed
-                this.form.submit();
-            }
-            document.getElementById("queue").addEventListener("change", autoSubmit);
+<table class="controls-table">
+    <tr>
+        <td style="width: 20%;">
+            <form method="POST" class="date-picker-form">
+                <label for="start_date">From</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
+                <label for="end_date">To</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
+                <button id="reset_button">Reset</button>
+            </form>
+        </td>
+        <td style="width: 40%;">
+            <h2 class="header centered-text">Trueskill Rankings</h2>
+        </td>
+        <td style="width: 20%;">
+            <form method="POST" id="min-games-form">
+                <label for="min_games">Min games </label>
+                <input type="number" id="min_games" name="min_games" value="{{ min_games }}"
+                    placeholder="{{ min_games }}">
+            </form>
+        </td>
+        <td style="width: 20%;">
+            <form method="POST" class="date-picker-form">
+                <select id="queue" name="queue">
+                    <option value="NA" {% if queue=='NA' %}selected{% endif %}>NA</option>
+                    <option value="EU" {% if queue=='EU' %}selected{% endif %}>EU</option>
+                </select>
+            </form>
+        </td>
+    </tr>
+</table>
+<div class="table-container">
+    <div class="table-wrapper">
+        <table>
+            <tr>
+                <th style="width: 10%;">Rank</th>
+                <th style="width: 40%;">Player Name</th>
+                <th style="width: 15%;">Trueskill</th>
+                <th style="width: 15%;">μ</th>
+                <th style="width: 15%;">σ</th>
+            </tr>
+            {% for player in player_list %}
+            <tr>
+                <td>{{ player.rank }}</td>
+                <td>{{ player.name }}</td>
+                <td>{{ player.trueskill }}</td>
+                <td>{{ player.mu }}</td>
+                <td>{{ player.sigma }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+<script src="{{ url_for('static', filename='js/rankings.js') }}"></script>
 
-            document.getElementById("min_games").addEventListener("change", autoSubmit);
-            document.getElementById("min-games-form").addEventListener("submit", function(event) {
-                // Prevent the form from being submitted normally
-                event.preventDefault();
-
-                // Submit the form via JavaScript
-                this.submit();
-            });
-
-            function resetDates() {
-                // Prevent the form from being submitted
-                event.preventDefault();
-        
-                // Set the start date to November 1, 2018
-                document.getElementById("start_date").value = "2018-11-01";
-        
-                // Set the end date to the current date
-                let today = new Date();
-                let dd = String(today.getDate()).padStart(2, '0');
-                let mm = String(today.getMonth() + 1).padStart(2, '0');
-                let yyyy = today.getFullYear();
-                today = yyyy + '-' + mm + '-' + dd;
-                document.getElementById("end_date").value = today;
-        
-                // Submit the form
-                this.form.submit();
-            }
-        }
-    </script>  
 {% endblock %}
-

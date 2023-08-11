@@ -1,1 +1,1 @@
-web: gunicorn app:trueskill-stats
+web: gunicorn app:app

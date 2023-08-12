@@ -1,12 +1,4 @@
 
-.match-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%; 
-    padding: 32px;
-    margin-right: 5%;
-}
 table tr td {
     padding-top: 10px; 
     padding-bottom: 10px; 
@@ -191,4 +183,25 @@ table tr td {
     float: right;
     text-align: right;
     margin-bottom: 20px;
+}
+/* Win Probability Bar styles when Team 1 is favored */
+.win-prob-bar.team1-favored,
+.rebalanced-win-prob-bar.team1-favored {
+    background-color: #dd938c;
+}
+
+.win-prob-bar.team1-favored .team1-prob,
+.rebalanced-win-prob-bar.team1-favored .rebalanced-team1-prob {
+    background-color: #8de79c;
+}
+
+/* Win Probability Bar styles when Team 2 is favored */
+.win-prob-bar.team2-favored,
+.rebalanced-win-prob-bar.team2-favored {
+    background-color: #8de79c;
+}
+
+.win-prob-bar.team2-favored .team1-prob,
+.rebalanced-win-prob-bar.team2-favored .rebalanced-team1-prob {
+    background-color: #dd938c;
 }

@@ -1,3 +1,91 @@
+$(document).ready(function () {
+    initializeEventHandlers();
+    updatePlayerClickability();
+    setInitialMatchStyles();
+});
+
+function initializeEventHandlers() {
+    $('#player_search').on('keyup', handlePlayerSearch);
+    $('.ranking-table tr').not(':first').on('click', handlePlayerRowClick);
+    $('#move_to_team1').on('click', () => moveToTeam('team1'));
+    $('#move_to_team2').on('click', () => moveToTeam('team2'));
+    $('#rebalance-teams').on('click', handleRebalanceTeams);
+    $(document).on('click', '.remove-match-player', handleRemovePlayer);
+    $('#calculate-win-probability').on('click', handleCalculateWinProbability);
+}
+
+function handlePlayerSearch() {
+    let value = $(this).val().toLowerCase();
+    $('.ranking-table tr').not(':first').each(function() {
+        toggleVisibility($(this), $(this).text().toLowerCase().indexOf(value) > -1);
+    });
+}
+
+function toggleVisibility(element, condition) {
+    element.toggle(condition);
+}
+
+function handlePlayerRowClick() {
+    if ($(this).hasClass('clickable')) {
+        $(this).toggleClass('selected');
+    }
+}
+
+function setInitialMatchStyles() {
+    $(".match-container td:first-child ul, .match-container td:last-child ul").addClass('tie');
+}
+
+function handleRebalanceTeams() {
+    let allPlayers = gatherAllPlayers();
+    allPlayers.sort((a, b) => b.trueskill - a.trueskill);
+
+    let rebalancedTeam1 = [];
+    let rebalancedTeam2 = [];
+    balanceTeams([...allPlayers], rebalancedTeam1, rebalancedTeam2);
+
+    updateRebalancedTeamsUI(rebalancedTeam1, rebalancedTeam2);
+    calculateRebalancedWinChances(rebalancedTeam1, rebalancedTeam2);
+}
+
+function handleRemovePlayer() {
+    let playerId = $(this).data('id');
+    let rankingRow = $('.ranking-table tr[data-id="' + playerId + '"]');
+
+    toggleClass(rankingRow, 'greyed-out', false);
+    toggleClass(rankingRow, 'clickable', true);
+
+    $(`#team1-list li[data-id="${playerId}"], #team2-list li[data-id="${playerId}"]`).remove();
+    $(this).text('-');
+
+    updateMatchStats('team1');
+    updateMatchStats('team2');
+    updatePlayerClickability();
+    updateWinProbabilities();
+}
+
+function toggleClass(element, className, condition) {
+    if (condition) {
+        element.addClass(className);
+    } else {
+        element.removeClass(className);
+    }
+}
+
+function handleCalculateWinProbability() {
+    let team1_ids = gatherTeamPlayerIDs('team1');
+    let team2_ids = gatherTeamPlayerIDs('team2');
+
+    $.post("/calculate_probability", { team1: team1_ids, team2: team2_ids }, function (data) {
+        $('#win-chance-display').text(data.win_probability + '%');
+    });
+}
+
+function gatherTeamPlayerIDs(teamId) {
+    return $(`#${teamId}-list li`).map(function () {
+        return $(this).data('id');
+    }).get();
+}
+
 function moveToTeam(teamId) {
     $('.ranking-table tr.selected').each(function () {
         let playerName = $(this).find('td:nth-child(2)').text();
@@ -60,7 +148,7 @@ function setWinChances(team1Chance, team2Chance) {
 
     // Update the bar width for "Calculated Match" UI
     $("#calculated-teams-container .team1-prob").css("width", `${team1Chance}%`);
-
+    compareStats(".match-container .stats-container.left", ".match-container .stats-container.right");
     // Determine colors and styles based on win chances
     if (Math.abs(team1Chance - team2Chance) <= 2) {
         $("#calculated-teams-container td:first-child ul, #calculated-teams-container td:last-child ul").removeClass('win loss tie').addClass('tie');
@@ -84,7 +172,6 @@ function setWinChances(team1Chance, team2Chance) {
 
 
 
-
 function updateMatchUI(teamId, playerName, playerId, trueskill, mu, sigma) {
     let teamSlot;
     if (teamId === "team1") {
@@ -101,13 +188,41 @@ function updateMatchUI(teamId, playerName, playerId, trueskill, mu, sigma) {
         }
     });
 }
+function sumTrueskill(team) {
+        return team.reduce((sum, player) => sum + player.trueskill, 0);
+    }
+function balanceTeams(players, rebalancedTeam1, rebalancedTeam2) {
+    if (players.length === 0) return;
 
+    let nextPlayer = players.shift();
 
+    if (rebalancedTeam1.length < 7 &&
+        (rebalancedTeam1.length < rebalancedTeam2.length ||
+            sumTrueskill(rebalancedTeam1) <= sumTrueskill(rebalancedTeam2))) {
+                rebalancedTeam1.push({
+                    id: nextPlayer.id, 
+                    trueskill: nextPlayer.trueskill, 
+                    mu: nextPlayer.mu, 
+                    sigma: nextPlayer.sigma,
+                    name: nextPlayer.name
+                });                    
+    } else if (rebalancedTeam2.length < 7) {
+        rebalancedTeam2.push({
+            id: nextPlayer.id, 
+            trueskill: nextPlayer.trueskill, 
+            mu: nextPlayer.mu, 
+            sigma: nextPlayer.sigma,
+            name: nextPlayer.name
+        });
+        
+    }
 
-$('#rebalance-teams').on('click', function () {
+    balanceTeams(players, rebalancedTeam1, rebalancedTeam2);
+}
+
+// Function to gather all players from both teams
+function gatherAllPlayers() {
     let allPlayers = [];
-
-    // Gather all the players from both teams
     $('#team1-list li, #team2-list li').each(function () {
         let playerId = $(this).data('id');
         let playerTrueskill = $(this).data('trueskill');
@@ -122,54 +237,14 @@ $('#rebalance-teams').on('click', function () {
             name: playerName
         });
     });
-    
+    return allPlayers;
+}
 
-    // Sort players by trueskill rating
-    allPlayers.sort((a, b) => b.trueskill - a.trueskill);
-
-    let rebalancedTeam1 = [];
-    let rebalancedTeam2 = [];
-
-    // Recursive function to balance the teams
-    function balanceTeams(players) {
-        if (players.length === 0) return;
-
-        let nextPlayer = players.shift();
-
-        if (rebalancedTeam1.length < 7 &&
-            (rebalancedTeam1.length < rebalancedTeam2.length ||
-                sumTrueskill(rebalancedTeam1) <= sumTrueskill(rebalancedTeam2))) {
-                    rebalancedTeam1.push({
-                        id: nextPlayer.id, 
-                        trueskill: nextPlayer.trueskill, 
-                        mu: nextPlayer.mu, 
-                        sigma: nextPlayer.sigma,
-                        name: nextPlayer.name
-                    });                    
-        } else if (rebalancedTeam2.length < 7) {
-            rebalancedTeam2.push({
-                id: nextPlayer.id, 
-                trueskill: nextPlayer.trueskill, 
-                mu: nextPlayer.mu, 
-                sigma: nextPlayer.sigma,
-                name: nextPlayer.name
-            });
-            
-        }
-
-        balanceTeams(players);
-    }
-
-    function sumTrueskill(team) {
-        return team.reduce((sum, player) => sum + player.trueskill, 0);
-    }
-
-    balanceTeams([...allPlayers]);
-
+// Function to update the rebalanced teams' UI
+function updateRebalancedTeamsUI(rebalancedTeam1, rebalancedTeam2) {
     // Clear the rebalanced teams containers
     $('#rebalanced-team1-list li, #rebalanced-team2-list li').text('-');
 
-    // Add players to the rebalanced teams containers using original hidden team containers
     rebalancedTeam1.forEach(player => {
         let playerName = $(`#team1-list li[data-id="${player.id}"], #team2-list li[data-id="${player.id}"]`).find('.player-name').text();
         let nextSlot = $('#rebalanced-team1-list li').filter(function() {
@@ -194,45 +269,90 @@ $('#rebalance-teams').on('click', function () {
     
     updateRebalancedMatchStats(rebalancedTeam1, "rebalanced-team1-list");
     updateRebalancedMatchStats(rebalancedTeam2, "rebalanced-team2-list");
+}
 
-    // Calculate win chance for rebalanced teams
+// Function to calculate win chances and update the UI
+function calculateRebalancedWinChances(rebalancedTeam1, rebalancedTeam2) {
     let team1_ids = rebalancedTeam1.map(player => player.id);
     let team2_ids = rebalancedTeam2.map(player => player.id);
 
     $.post("/calculate_probability", { team1: team1_ids, team2: team2_ids }, function (data) {
         let team1Chance = parseFloat(data.win_probability);
         let team2Chance = 100 - team1Chance;
+
         // Update the display values for "Rebalanced Match" UI
         $("#rebalanced-teams-container .rebalanced-win-prob-container span:first-child").text(`${team1Chance.toFixed(2)}%`);
         $("#rebalanced-teams-container .rebalanced-win-prob-container span:last-child").text(`${team2Chance.toFixed(2)}%`);
-
+        
         // Update the bar width for "Rebalanced Match" UI
         $("#rebalanced-teams-container .rebalanced-team1-prob").css("width", `${team1Chance}%`);
-        $('#rebalanced-team1-win-chance').text(`${team1Chance.toFixed(2)}%`);
-        $('#rebalanced-team2-win-chance').text(`${team2Chance.toFixed(2)}%`);
-        $(".win-prob-container .team1-prob").css("width", `${team1Chance}%`);
+        compareStats("#rebalanced-teams-container .rebalanced-stats-container.left", "#rebalanced-teams-container .rebalanced-stats-container.right");
 
-        // Update colors for "Rebalanced Match" UI
         if (Math.abs(team1Chance - team2Chance) <= 2) {
-            $("#rebalanced-teams-container td:first-child ul, #rebalanced-teams-container td:last-child ul").removeClass('win loss tie').addClass('tie');
-            $("#rebalanced-teams-container .win-prob-container span").css("font-weight", "normal");
+            $("#rebalanced-teams-container td:first-child ul, #rebalanced-teams-container td:last-child ul").removeClass('win loss').addClass('tie');
+            $("#rebalanced-teams-container .rebalanced-win-prob-container span").css("font-weight", "normal");
         } else {
             if (team1Chance > team2Chance) {
                 $("#rebalanced-teams-container td:first-child ul").removeClass('tie loss').addClass('win');
                 $("#rebalanced-teams-container td:last-child ul").removeClass('tie win').addClass('loss');
-                $("#rebalanced-teams-container .win-prob-container span:first-child").css("font-weight", "bold");
-                $("#rebalanced-teams-container .win-prob-container span:last-child").css("font-weight", "normal");
-                $("#rebalanced-teams-container .win-prob-bar").removeClass('team2-favored').addClass('team1-favored');
+                $("#rebalanced-teams-container .rebalanced-win-prob-container span:first-child").css("font-weight", "bold");
+                $("#rebalanced-teams-container .rebalanced-win-prob-container span:last-child").css("font-weight", "normal");
+                $("#rebalanced-teams-container .rebalanced-win-prob-bar").removeClass('team2-favored').addClass('team1-favored');
             } else {
                 $("#rebalanced-teams-container td:first-child ul").removeClass('tie win').addClass('loss');
                 $("#rebalanced-teams-container td:last-child ul").removeClass('tie loss').addClass('win');
-                $("#rebalanced-teams-container .win-prob-container span:first-child").css("font-weight", "normal");
-                $("#rebalanced-teams-container .win-prob-container span:last-child").css("font-weight", "bold");
-                $("#rebalanced-teams-container .win-prob-bar").removeClass('team1-favored').addClass('team2-favored');
+                $("#rebalanced-teams-container .rebalanced-win-prob-container span:first-child").css("font-weight", "normal");
+                $("#rebalanced-teams-container .rebalanced-win-prob-container span:last-child").css("font-weight", "bold");
+                $("#rebalanced-teams-container .rebalanced-win-prob-bar").removeClass('team1-favored').addClass('team2-favored');
             }
         }
     });
-});
+}
+
+function compareStats(statsContainerLeft, statsContainerRight) {
+    // Extract average stats for both teams
+    let team1TS = parseFloat($(statsContainerLeft + " span:first-child").text());
+    let team1Mu = parseFloat($(statsContainerLeft + " span:nth-child(3)").text());
+    let team1Sigma = parseFloat($(statsContainerLeft + " span:last-child").text());
+
+    let team2TS = parseFloat($(statsContainerRight + " span:first-child").text());
+    let team2Mu = parseFloat($(statsContainerRight + " span:nth-child(3)").text());
+    let team2Sigma = parseFloat($(statsContainerRight + " span:last-child").text());
+
+    // Compare Trueskill and set bold for the higher value
+    if (team1TS > team2TS) {
+        $(statsContainerLeft + " span:first-child").css("font-weight", "bold");
+        $(statsContainerRight + " span:first-child").css("font-weight", "normal");
+    } else if (team1TS < team2TS) {
+        $(statsContainerLeft + " span:first-child").css("font-weight", "normal");
+        $(statsContainerRight + " span:first-child").css("font-weight", "bold");
+    } else {
+        $(statsContainerLeft + " span:first-child, " + statsContainerRight + " span:first-child").css("font-weight", "normal");
+    }
+
+    // Compare Mu and set bold for the higher value
+    if (team1Mu > team2Mu) {
+        $(statsContainerLeft + " span:nth-child(3)").css("font-weight", "bold");
+        $(statsContainerRight + " span:nth-child(3)").css("font-weight", "normal");
+    } else if (team1Mu < team2Mu) {
+        $(statsContainerLeft + " span:nth-child(3)").css("font-weight", "normal");
+        $(statsContainerRight + " span:nth-child(3)").css("font-weight", "bold");
+    } else {
+        $(statsContainerLeft + " span:nth-child(3), " + statsContainerRight + " span:nth-child(3)").css("font-weight", "normal");
+    }
+
+    // Compare Sigma and set bold for the lower value
+    if (team1Sigma < team2Sigma) {
+        $(statsContainerLeft + " span:last-child").css("font-weight", "bold");
+        $(statsContainerRight + " span:last-child").css("font-weight", "normal");
+    } else if (team1Sigma > team2Sigma) {
+        $(statsContainerLeft + " span:last-child").css("font-weight", "normal");
+        $(statsContainerRight + " span:last-child").css("font-weight", "bold");
+    } else {
+        $(statsContainerLeft + " span:last-child, " + statsContainerRight + " span:last-child").css("font-weight", "normal");
+    }
+}
+
 
 function updateRebalancedMatchStats(rebalancedTeam, teamContainerId) {
     let totalTrueskill = 0;
@@ -261,54 +381,6 @@ function updateRebalancedMatchStats(rebalancedTeam, teamContainerId) {
     }
 }
 
-
-// Remove player from a team
-$(document).on('click', '.remove-match-player', function () {
-    let playerRow = $(this).closest('li');
-    let playerId = $(this).data('id');
-
-    // Use the playerId to find the corresponding row in the ranking table
-    let rankingRow = $('.ranking-table tr[data-id="' + playerId + '"]');
-    if (rankingRow.length > 0) {
-        rankingRow.removeClass('greyed-out').addClass('clickable');
-    } else {
-        console.error("Player ranking row NOT found for player ID: " + playerId);
-    }
-
-    // Remove the player from the main team list 
-    $(`#team1-list li[data-id="${playerId}"], #team2-list li[data-id="${playerId}"]`).remove();
-    
-    // Set it back to the placeholder in the "Last Match Played" UI
-    playerRow.text('-');
-
-    // Update the statistics for both teams
-    updateMatchStats('team1');
-    updateMatchStats('team2');
-    
-    // Update player clickability and win probabilities
-    updatePlayerClickability();
-    updateWinProbabilities();
-});
-
-
-
-$('#calculate-win-probability').on('click', function () {
-    let team1_ids = [];
-    let team2_ids = [];
-
-    $('#team1-list li').each(function () {
-        team1_ids.push($(this).data('id'));
-    });
-
-    $('#team2-list li').each(function () {
-        team2_ids.push($(this).data('id'));
-    });
-
-    $.post("/calculate_probability", { team1: team1_ids, team2: team2_ids }, function (data) {
-        $('#win-chance-display').text(data.win_probability + '%');
-    });
-});
-
 function updatePlayerClickability() {
     // Get all player IDs currently in teams
     let playersInTeams = [];
@@ -325,42 +397,6 @@ function updatePlayerClickability() {
         }
     });
 }
-
-
-
-$(document).ready(function () {
-    $('.ranking-table tr').not(':first').addClass('clickable');
-    // Attach keyup event to the search input
-    $('#player_search').on('keyup', function () {
-        // Get the current value of the search input
-        let value = $(this).val().toLowerCase();
-
-        // Filter the table rows based on the input value
-        $('.ranking-table tr').not(':first').filter(function () {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-        });
-    });
-
-    // Toggle row selection when a table row is clicked
-    // Only rows from the player ranking table and not the header
-    $('.ranking-table tr').not(':first').on('click', function () {
-        if ($(this).hasClass('clickable')) {
-            $(this).toggleClass('selected');
-        }
-    });
-
-
-    // Attach event handlers to the move buttons
-    $('#move_to_team1').on('click', function () {
-        moveToTeam('team1');
-    });
-
-    $('#move_to_team2').on('click', function () {
-        moveToTeam('team2');
-    });
-    updatePlayerClickability();
-    $(".match-container td:first-child ul, .match-container td:last-child ul").addClass('tie');
-});
 
 function updateMatchStats(teamId) {
     let teamSlot;

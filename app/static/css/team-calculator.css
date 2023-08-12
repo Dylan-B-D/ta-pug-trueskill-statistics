@@ -1,8 +1,7 @@
 .table-container {
     padding: 0 5%;
-    margin-left: 5%;
     overflow-x: auto;
-    max-width: 60%;
+    flex-basis: 30%; /* Take up 30% of the horizontal space */
 }
 
 table {
@@ -144,39 +143,26 @@ table tr {
 .main-wrapper {
     display: flex;
     height: 100%; 
-    width: 80%; 
-    flex-direction: row;  /* Ensure children are side by side */
-    align-items: flex-start; /* Content starts at the top of the container */
-    padding: 0;
-    margin: 0;
-    justify-content: flex-start; /* This ensures the content starts at the left */
+    padding: 2% 5%; /* Top padding and side padding */
+    flex-direction: row;
+    align-items: flex-start;
 }
 
 
 
 .matches-container {
-    flex: 1; /* Takes up the remaining space */
     display: flex;
     flex-direction: column;
-    padding: 0;
-    margin: 0;
-    align-self: flex-start; /* Aligns this container to the start */
-    max-width: 100%;
+    align-self: flex-start; 
+    flex-basis: 70%; /* Take up 70% of the horizontal space */
 }
-@media (max-width: 800px) {  /* adjust this value based on when you start seeing overlap */
-    .table-container {
-        width: 100%;  /* Full width */
-        max-width: 100%;
-    }
 
-    .matches-container {
-        width: 100%;  /* Full width */
-    }
-}
 .match-container {
-    margin: 0;
-    padding: 0;
-    width: 100%; /* Takes up the full width of its parent */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; 
+    /* margin-right: 5%; */ /* Remove or reduce this */
 }
 
 

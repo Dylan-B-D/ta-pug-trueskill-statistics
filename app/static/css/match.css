@@ -55,7 +55,7 @@ table tr td {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-right: 260px;
+    margin-right: 3vw;
     margin-left: 0px;
     width: 100%;
 }
@@ -119,14 +119,22 @@ table tr td {
     color:#444444;
     box-shadow: 0 0 10px 5px #00000041;
 }
-.match-container ul.win {
-    background-color: #8de79cc4;  
-}
-.match-container ul.loss {
-    background-color: #ffbbb3b9; 
-}
+.match-container ul.win,
+.match-container ul.loss,
 .match-container ul.tie {
-    background-color: #fffeb6;  
+    width: 8rem; /* 150px converted to rem assuming 1rem = 16px */
+}
+
+.match-container ul.win {
+    background-color: #8de79cc4;
+}
+
+.match-container ul.loss {
+    background-color: #ffbbb3b9;
+}
+
+.match-container ul.tie {
+    background-color: #fffeb6;
 }
 .match-container li {
     margin-bottom: 4px;
@@ -135,5 +143,52 @@ table tr td {
 .match-container li.captain {
     font-weight: bold;
 }
-
-
+.rebalanced-win-prob-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-right: 3vw;
+    margin-left: 0px;
+    width: 100%;
+}
+.rebalanced-win-prob-bar {
+    width: 100%;
+    height: 12px;
+    border-radius: 4px;
+    background-color: #dd938c;
+    position: relative;
+    margin-left: 8px;
+    margin-right: 8px;
+    box-shadow: 0 0 10px 5px #0000002c;
+}
+.rebalanced-team1-prob {
+    height: 100%;
+    border-radius: 4px 0px 0px 4px;
+    background-color: #8de79c;
+}
+.rebalanced-win-prob-bar.team2-favored {
+    background-color: #8de79c;
+}
+.rebalanced-win-prob-bar.team2-favored .team1-prob {
+    background-color: #dd938c;
+}
+.rebalanced-win-prob-bar::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 100%;
+    background: #333;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 50%;
+    z-index: 2;
+}
+.rebalanced-stats-container.left {
+    float: left;
+    margin-bottom: 20px;
+}
+.rebalanced-stats-container.right {
+    float: right;
+    text-align: right;
+    margin-bottom: 20px;
+}

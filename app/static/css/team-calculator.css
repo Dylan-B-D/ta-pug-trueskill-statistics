@@ -1,7 +1,8 @@
 .table-container {
-    padding: 0 20%;
+    padding: 0 5%;
     margin-left: 5%;
     overflow-x: auto;
+    max-width: 60%;
 }
 
 table {
@@ -109,7 +110,6 @@ table tr {
     border-radius: 8px;
     font-size: 0.9em;
     transition: background-color 0.3s ease;
-    min-width: 150px;
     text-align: center;
     display: inline-block;
 }
@@ -119,33 +119,77 @@ table tr {
     background-color: rgba(255, 255, 255, 0.85);
     box-shadow: 0 0 5px #aaa;
 }
+
+#rebalance-teams {
+    padding: 10px 20px;
+    background-color: var(--text-color);
+    color: var(--secondary-color);
+    text-decoration: none;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    display: inline-block;
+}
+
+ 
+#rebalance-teams:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+}
 .table-container table th {
     background-color: var(--secondary-highlight);
 }
 .main-wrapper {
     display: flex;
-    height: 100%; /* take the full height of the parent */
-    width: 100%; /* Ensure it takes up the full width */
+    height: 100%; 
+    width: 80%; 
+    flex-direction: row;  /* Ensure children are side by side */
+    align-items: flex-start; /* Content starts at the top of the container */
+    padding: 0;
+    margin: 0;
+    justify-content: flex-start; /* This ensures the content starts at the left */
 }
 
-.table-container {
-    flex: 1;
-    padding-right: 0%;
-}
 
 
-.table-container,
-.last-match-container {
-    width: 30%; /* each container takes up half the width */
+.matches-container {
+    flex: 1; /* Takes up the remaining space */
     display: flex;
     flex-direction: column;
-    align-items: center; /* horizontally center the content */
-    overflow-y: auto; /* add scroll if content overflows vertically */
-    padding: 2% 2%; /* Add a little padding to both */
+    padding: 0;
+    margin: 0;
+    align-self: flex-start; /* Aligns this container to the start */
+    max-width: 100%;
 }
+@media (max-width: 800px) {  /* adjust this value based on when you start seeing overlap */
+    .table-container {
+        width: 100%;  /* Full width */
+        max-width: 100%;
+    }
+
+    .matches-container {
+        width: 100%;  /* Full width */
+    }
+}
+.match-container {
+    margin: 0;
+    padding: 0;
+    width: 100%; /* Takes up the full width of its parent */
+}
+
+
+.hidden {
+    display: none;
+}
+
 .greyed-out {
     background-color: #661b1b;
     cursor: not-allowed;
+}
+.table-container table tr.greyed-out:hover {
+    background-color: #693333;
 }
 
 .clickable {

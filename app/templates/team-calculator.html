@@ -18,11 +18,6 @@
         </td>
         <td style="width: 20%;">
         <td style="width: 20%;">
-            <button id="move_to_team1" class="move-button">Move to Team 1</button>
-            <button id="move_to_team2" class="move-button">Move to Team 2</button>
-            <button id="calculate-win-probability">Calculate Win Probability</button>
-            <button id="rebalance-teams">Rebalance Teams</button>
-            <div id="win-chance-display"></div>
 
         </td>
         </td>
@@ -33,6 +28,9 @@
 <div class="main-wrapper">
     <!-- Rankings List (Center Left) -->
     <div class="table-container">
+        <button id="move_to_team1" class="move-button">Move to Team 1</button>
+        <button id="move_to_team2" class="move-button">Move to Team 2</button>
+        <button id="rebalance-teams">Rebalance Teams</button>
         <table class="ranking-table">
             <tr>
                 <th style="width: 10%;">Rank</th>
@@ -52,32 +50,115 @@
             {% endfor %}
         </table>
     </div>
+    
+    <!-- Calculated Match and Rebalanced Match (Right) -->
+    <div class="matches-container">
+        <!-- Calculated match -->
+        <div class="match-container" id="calculated-teams-container">
+            <table class="match-table">
+                <tr>
+                    <th>Team 1</th>
+                    <th>Team Balance</th>
+                    <th>Team 2</th>
+                </tr>
+                <tr>
+                    <td>
+                        <ul class="player-list">
+                            {% for _ in range(7) %}
+                            <li>-</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="match-info">
+                        <div class="stats-container left">
+                            ts: <span>0.0</span><br>
+                            μ: <span>0.0</span><br>
+                            σ: <span>0.0</span>
+                        </div>
+                        <div class="stats-container right">
+                            <span>0.0</span> :ts<br>
+                            <span>0.0</span> :μ<br>
+                            <span>0.0</span> :σ
+                        </div>
+                        <div class="win-prob-container">
+                            <span>50.00%</span>
+                            <div class="win-prob-bar">
+                                <div class="team1-prob" style="width: 50%;"></div>
+                            </div>
+                            <span>50.00%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <ul class="player-list">
+                            {% for _ in range(7) %}
+                            <li>-</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Rebalanced Teams -->
+        <div class="match-container" id="rebalanced-teams-container">
+            <table class="rebalanced-match-table">
+                <tr>
+                    <th>Team 1</th>
+                    <th>Rebalanced Info</th>
+                    <th>Team 2</th>
+                </tr>
+                <tr>
+                    <td>
+                        <ul class="rebalanced-player-list" id="rebalanced-team1-list">
+                            {% for _ in range(7) %}
+                            <li>-</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="rebalanced-match-info">
+                        <div class="rebalanced-stats-container left">
+                            ts: <span>0.0</span><br>
+                            μ: <span>0.0</span><br>
+                            σ: <span>0.0</span>
+                        </div>
+                        <div class="rebalanced-stats-container right">
+                            <span>0.0</span> :ts<br>
+                            <span>0.0</span> :μ<br>
+                            <span>0.0</span> :σ
+                        </div>
+                        
+                        <div class="rebalanced-win-prob-container">
+                            <span id="rebalanced-team1-win-chance">50.00%</span>
+                            <div class="rebalanced-win-prob-bar">
+                                <div class="rebalanced-team1-prob" style="width: 50%;"></div>
+                            </div>
+                            <span id="rebalanced-team2-win-chance">50.00%</span>
+                        </div>
+                    </td>
+                    <td>
+                        <ul class="rebalanced-player-list" id="rebalanced-team2-list">
+                            {% for _ in range(7) %}
+                            <li>-</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
 
     <!-- Team 1 -->
-    <div class="team-container" id="team1">
+    <div class="team-container hidden" id="team1">
         <h3>Team 1</h3>
         <ul class="player-list" id="team1-list"></ul>
     </div>
 
     <!-- Team 2 -->
-    <div class="team-container" id="team2">
+    <div class="team-container hidden" id="team2">
         <h3>Team 2</h3>
         <ul class="player-list" id="team2-list"></ul>
     </div>
-    <div class="team-container" id="rebalanced-team1">
-        <h3>Rebalanced Team 1</h3>
-        <ul class="player-list" id="rebalanced-team1-list"></ul>
-    </div>
-    <div id="rebalanced-win-chance-display" class="win-chance-container">
-        Win Chance for Rebalanced Team 1: <span id="rebalanced-win-chance">--</span>%
-    </div>
+</div>
 
-    <!-- Rebalanced Team 2 -->
-    <div class="team-container" id="rebalanced-team2">
-        <h3>Rebalanced Team 2</h3>
-        <ul class="player-list" id="rebalanced-team2-list"></ul>
-    </div>
-    <!-- Last Match Played (Right) -->
-
-    <script src="{{ url_for('static', filename='js/team-calculator.js') }}"></script>
-    {% endblock %}
+<script src="{{ url_for('static', filename='js/team-calculator.js') }}"></script>
+{% endblock %}

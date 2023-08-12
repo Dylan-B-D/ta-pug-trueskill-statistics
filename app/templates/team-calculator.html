@@ -7,7 +7,7 @@
 {% block content %}
 <table class="controls-table">
     <tr>
-        <td style="width: 20%;">
+        <td style="width: 30%;">
             <form method="POST" class="player-search-form">
                 <input type="text" id="player_search" name="search_query" placeholder="Search for a player"
                     value="{{ request.form['search_query'] }}">
@@ -28,16 +28,15 @@
 <div class="main-wrapper">
     <!-- Rankings List (Center Left) -->
     <div class="table-container">
-        <button id="move_to_team1" class="move-button">Move to Team 1</button>
-        <button id="move_to_team2" class="move-button">Move to Team 2</button>
-        <button id="rebalance-teams">Rebalance Teams</button>
         <table class="ranking-table">
             <tr>
                 <th style="width: 10%;">Rank</th>
-                <th style="width: 40%;">Player Name</th>
+                <th style="width: 20%;">Player Name</th>
                 <th style="width: 15%;">Trueskill</th>
                 <th style="width: 15%;">μ</th>
                 <th style="width: 15%;">σ</th>
+                <th style="width: 10%;">T1</th>
+                <th style="width: 10%;">T2</th>
             </tr>
             {% for player in player_list %}
             <tr data-id="{{ player.id }}">
@@ -46,6 +45,8 @@
                 <td>{{ player.trueskill }}</td>
                 <td>{{ player.mu }}</td>
                 <td>{{ player.sigma }}</td>
+                <td class="move-cell"><button class="move-button move-button-left" data-target="team1">⮜</button></td>
+                <td class="move-cell"><button class="move-button move-button-right" data-target="team2">⮞</button></td>
             </tr>
             {% endfor %}
         </table>
@@ -57,9 +58,9 @@
         <div class="match-container" id="calculated-teams-container">
             <table class="match-table">
                 <tr>
-                    <th>Team 1</th>
+                    <th>Team 1 <button class="reset-team-btn" data-team="team1">↺</button></th>
                     <th>Team Balance</th>
-                    <th>Team 2</th>
+                    <th><button class="reset-team-btn" data-team="team2">↺</button> Team 2</th>
                 </tr>
                 <tr>
                     <td>
@@ -98,7 +99,7 @@
                 </tr>
             </table>
         </div>
-
+        <button id="rebalance-teams">Rebalance Teams</button>
         <!-- Rebalanced Teams -->
         <div class="match-container" id="rebalanced-teams-container">
             <table class="rebalanced-match-table">

@@ -28,6 +28,7 @@ table tr td {
 }
 .match-container table th {
     background-color: var(--secondary-highlight);
+    text-align: center;
 }
 .match-container table th:first-child {
     border-radius: 10px 0px 0px 10px;
@@ -126,7 +127,7 @@ table tr td {
 }
 
 .match-container ul.tie {
-    background-color: #fffeb6;
+    background-color: #adac65;
 }
 .match-container li {
     margin-bottom: 4px;

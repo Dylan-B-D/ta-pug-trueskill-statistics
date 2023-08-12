@@ -130,7 +130,28 @@ table tr {
     box-shadow: 0 0 5px #aaa;
     color:#444444;
 }
-
+#copy-rebalanced-match {
+    padding: 10px 20px;
+    background-color: var(--dark-blue);
+    color: var(--text-color);
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9em;
+    transition: background-color 0.3s ease;
+    text-align: center;
+    display: inline-block;
+    margin-left: 25%;
+    margin-bottom: 2%;
+    margin-top: 2%;
+    max-width: 50%;
+    box-shadow: 0 0 5px #7760ad;
+}
+#copy-rebalanced-match:hover {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 5px #aaa;
+    color:#444444;
+}
 #rebalance-teams {
     padding: 10px 20px;
     background-color: var(--dark-blue);
@@ -254,7 +275,7 @@ table tr {
     border: none;
     box-sizing: border-box;
     padding: 8px; 
-    background-color: var(--secondary-highlight);
+    background-color: #9b9b9b;
     font-weight: bold;
     color:var(--text-color);
 }

@@ -61,8 +61,66 @@ $(document).ready(function () {
         }
     });
 
-
+    $('#copy-rebalanced-match').on('click', function() {
+        let team1Players = [];
+        let team2Players = [];
+        
+        $('#rebalanced-team1-list li').each(function() {
+            team1Players.push($(this).text());
+        });
+        
+        $('#rebalanced-team2-list li').each(function() {
+            team2Players.push($(this).text());
+        });
+    
+        // Extract statistics
+        let team1TS = $("#rebalanced-teams-container .rebalanced-stats-container.left span:first-child").text();
+        let team1Mu = $("#rebalanced-teams-container .rebalanced-stats-container.left span:nth-child(3)").text();
+        let team1Sigma = $("#rebalanced-teams-container .rebalanced-stats-container.left span:last-child").text();
+        let team2TS = $("#rebalanced-teams-container .rebalanced-stats-container.right span:first-child").text();
+        let team2Mu = $("#rebalanced-teams-container .rebalanced-stats-container.right span:nth-child(3)").text();
+        let team2Sigma = $("#rebalanced-teams-container .rebalanced-stats-container.right span:last-child").text();
+    
+        let team1Chance = $("#rebalanced-teams-container .rebalanced-win-prob-container span:first-child").text();
+        let team2Chance = $("#rebalanced-teams-container .rebalanced-win-prob-container span:last-child").text();
+    
+        // Constructing the ASCII table with Discord-specific formatting (bold)
+        let separator = "+------------------------+------------------------+";
+        let formattedText = "```" + "\n"; // Start code block for Discord
+        formattedText += separator + "\n";
+        formattedText += "| **Team 1**              | **Team 2**              |\n";
+        formattedText += separator + "\n";
+        formattedText += `| Win Chance: ${team1Chance.padEnd(12)} | Win Chance: ${team2Chance.padEnd(12)} |\n`;
+        formattedText += `| TS: ${team1TS.padEnd(18)} | TS: ${team2TS.padEnd(18)} |\n`;
+        formattedText += `| Mu: ${team1Mu.padEnd(19)} | Mu: ${team2Mu.padEnd(19)} |\n`;
+        formattedText += `| Sigma: ${team1Sigma.padEnd(16)} | Sigma: ${team2Sigma.padEnd(16)} |\n`;
+        formattedText += separator + "\n";
+        
+        for (let i = 0; i < Math.max(team1Players.length, team2Players.length); i++) {
+            let player1 = team1Players[i] || ""; // Fallback to empty string if player doesn't exist
+            let player2 = team2Players[i] || "";
+            formattedText += `| ${player1.padEnd(24)} | ${player2.padEnd(24)} |\n`; // Pad player names to align nicely
+        }
+        
+        formattedText += separator;
+        formattedText += "\n```"; // End code block for Discord
+    
+        // Copy the formatted text to clipboard
+        copyToClipboard(formattedText);
+    
+        alert("Match copied to clipboard in Discord table format!");
+    });
+    
 });
+
+function copyToClipboard(text) {
+    var $temp = $("<textarea>");
+    $("body").append($temp);
+    $temp.val(text).select();
+    document.execCommand("copy");
+    $temp.remove();
+}
+
 
 function removePlayerFromTeam(playerId) {
     let playerRow = $(`.remove-match-player[data-id="${playerId}"]`).closest('li');
@@ -250,34 +308,46 @@ function updateMatchUI(teamId, playerName, playerId, trueskill, mu, sigma) {
 }
 function sumTrueskill(team) {
         return team.reduce((sum, player) => sum + player.trueskill, 0);
+}
+function generateCombinations(players, teamSize, startIndex = 0, currentTeam = []) {
+    if (currentTeam.length === teamSize) {
+        return [currentTeam];
     }
-function balanceTeams(players, rebalancedTeam1, rebalancedTeam2) {
-    if (players.length === 0) return;
-
-    let nextPlayer = players.shift();
-
-    if (rebalancedTeam1.length < 7 &&
-        (rebalancedTeam1.length < rebalancedTeam2.length ||
-            sumTrueskill(rebalancedTeam1) <= sumTrueskill(rebalancedTeam2))) {
-                rebalancedTeam1.push({
-                    id: nextPlayer.id, 
-                    trueskill: nextPlayer.trueskill, 
-                    mu: nextPlayer.mu, 
-                    sigma: nextPlayer.sigma,
-                    name: nextPlayer.name
-                });                    
-    } else if (rebalancedTeam2.length < 7) {
-        rebalancedTeam2.push({
-            id: nextPlayer.id, 
-            trueskill: nextPlayer.trueskill, 
-            mu: nextPlayer.mu, 
-            sigma: nextPlayer.sigma,
-            name: nextPlayer.name
-        });
-        
+    if (startIndex === players.length) {
+        return [];
     }
 
-    balanceTeams(players, rebalancedTeam1, rebalancedTeam2);
+    const withCurrentPlayer = generateCombinations(players, teamSize, startIndex + 1, currentTeam.concat(players[startIndex]));
+    const withoutCurrentPlayer = generateCombinations(players, teamSize, startIndex + 1, currentTeam);
+
+    return withCurrentPlayer.concat(withoutCurrentPlayer);
+}
+
+function balanceTeamsOptimized(players) {
+    let bestDifference = Infinity;
+    let bestTeam1 = [];
+    let bestTeam2 = [];
+
+    const maxTeamSize = Math.min(7, Math.floor(players.length / 2));
+    for (let teamSize = 1; teamSize <= maxTeamSize; teamSize++) {
+        const team1Combinations = generateCombinations(players, teamSize);
+
+        for (const team1 of team1Combinations) {
+            const team2 = players.filter(player => !team1.includes(player));
+            const difference = Math.abs(sumTrueskill(team1) - sumTrueskill(team2));
+
+            if (difference < bestDifference) {
+                bestDifference = difference;
+                bestTeam1 = team1;
+                bestTeam2 = team2;
+            }
+        }
+    }
+
+    return {
+        team1: bestTeam1,
+        team2: bestTeam2
+    };
 }
 
 // Function to gather all players from both teams
@@ -375,10 +445,7 @@ $('#rebalance-teams').on('click', function () {
     // Sort players by trueskill rating
     allPlayers.sort((a, b) => b.trueskill - a.trueskill);
 
-    let rebalancedTeam1 = [];
-    let rebalancedTeam2 = [];
-
-    balanceTeams([...allPlayers], rebalancedTeam1, rebalancedTeam2);
+    const { team1: rebalancedTeam1, team2: rebalancedTeam2 } = balanceTeamsOptimized(allPlayers);
 
     updateRebalancedTeamsUI(rebalancedTeam1, rebalancedTeam2);
     calculateRebalancedWinChances(rebalancedTeam1, rebalancedTeam2);

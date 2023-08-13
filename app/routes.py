@@ -30,7 +30,7 @@ def rankings():
 
     queue = request.form.get('queue', 'NA')
     game_data = fetch_data(start_date, end_date, queue)
-    player_ratings, player_names, player_games = calculate_ratings(game_data)
+    player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
 
     min_games_str = request.form.get('min_games', '10')
     try:
@@ -77,7 +77,7 @@ def match_history():
     
     # We get player ratings first since it's needed for both match_data and filtering
     game_data = fetch_data(start_date, end_date, queue)
-    player_ratings, player_names, player_games = calculate_ratings(game_data)
+    player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
     
     # Fetch match data directly
     match_data = fetch_match_data(start_date, end_date, queue, player_ratings)
@@ -102,7 +102,7 @@ player_ratings_global = {}
 def team_calculator():
     global player_ratings_global
     game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')
-    player_ratings, player_names, _ = calculate_ratings(game_data)
+    player_ratings, player_names, _ = calculate_ratings(game_data, 'NA')
     sorted_player_ids = sorted(player_ratings, key=lambda x: player_ratings[x].mu - 2*player_ratings[x].sigma, reverse=True)
     player_ratings_global = player_ratings
     query = request.form.get('search_query', '').lower()

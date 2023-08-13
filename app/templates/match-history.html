@@ -20,7 +20,8 @@
                 <select id="queue" name="queue" onchange="this.form.submit()">
                     <option value="NA" {% if queue=='NA' %}selected{% endif %}>NA</option>
                     <option value="EU" {% if queue=='EU' %}selected{% endif %}>EU</option>
-                </select>
+                    <option value="2v2" {% if queue=='2v2' %}selected{% endif %}>2v2</option>
+                </select>                
             </form>
         </td>
     </tr>
@@ -46,6 +47,10 @@
                 </ul>
             </td>
             <td class="match-info">
+                <div class="date-time-container centered-text">
+                    <strong>Map(s):</strong> {{ ", ".join(match.maps) if match.maps else "N/A" }}
+                </div>                
+                
                 <span class="match-id">ID: {{ match.index }}</span>
                 <div class="date-time-container centered-text">
                     {{ match.date.split()[1] }}<br> <!-- This assumes the date format is "YYYY-MM-DD HH:MM:SS" -->

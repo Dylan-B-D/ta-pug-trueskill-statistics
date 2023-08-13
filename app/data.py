@@ -18,9 +18,11 @@ def calculate_win_probability(rating1, rating2):
     # return stats.norm.cdf(delta_mu / math.sqrt(2 * sum_sigma))
 
 def calculate_win_probability_for_match(match, player_ratings):
+    ts = trueskill.TrueSkill()
     # Calculate win probability of team
-    team1_ratings = [player_ratings[player['user']['id']] for player in match['players'] if player['team'] == 1]
-    team2_ratings = [player_ratings[player['user']['id']] for player in match['players'] if player['team'] == 2]
+    team1_ratings = [player_ratings.get(player['user']['id'], ts.create_rating()) for player in match['players'] if player['team'] == 1]
+    team2_ratings = [player_ratings.get(player['user']['id'], ts.create_rating()) for player in match['players'] if player['team'] == 2]
+
 
     # Calculate average rating using μ - 2σ
     team1_avg_rating = trueskill.Rating(
@@ -34,7 +36,11 @@ def calculate_win_probability_for_match(match, player_ratings):
     return win_prob_team1
 
 def fetch_data(start_date, end_date, queue):
-    if queue == 'NA':
+    if queue == '2v2':
+        url = 'https://sh4z.se/pugstats/naTA.json'
+        json_replace = 'datanaTA = '
+        queue_filter = '2v2'
+    elif queue == 'NA':
         url = 'https://sh4z.se/pugstats/naTA.json'
         json_replace = 'datanaTA = '
         queue_filter = 'PUGz'
@@ -84,14 +90,14 @@ def decay_factor(timestamp, no_decay_period=90, half_life=365):
 
     return decay
 
-def calculate_ratings(game_data):
+def calculate_ratings(game_data, queue='NA'):
     global player_names, player_picks 
 
     # Initialize TrueSkill
     ts = trueskill.TrueSkill()
 
     # Initialize the skill ratings for each player who was never a captain
-    all_player_ids = set(player['user']['id'] for match in game_data for player in match['players'] if player['captain'] == 0)
+    all_player_ids = set(player['user']['id'] for match in game_data for player in match['players'])
     player_ratings = {player_id: ts.create_rating() for player_id in all_player_ids}
     player_names = {player['user']['id']: player['user']['name'] for match in game_data for player in match['players'] if player['captain'] == 0}
     player_games = {player_id: 0 for player_id in all_player_ids}
@@ -99,8 +105,12 @@ def calculate_ratings(game_data):
     player_picks = {player_id: [] for player_id in all_player_ids}
 
     for match in game_data:
-        # Exclude the game if the player was a captain
-        match_players = [player for player in match['players'] if player['captain'] == 0]     
+        if queue == '2v2':
+            # Include all players in 2v2
+            match_players = match['players']
+        else:
+            # Exclude the game if the player was a captain for other queues
+            match_players = [player for player in match['players'] if player['captain'] == 0]     
 
         # Record the pick order for each player who was not a captain and where pickOrder is not None
         for player in match_players:
@@ -149,11 +159,20 @@ def calculate_ratings(game_data):
 
     return player_ratings, player_names, player_games
 
+def load_map_data(queue):
+    filename = 'eu_maps_with_times.json' if queue == 'EU' else 'maps_with_times.json'
+    with open(f'app/data/{filename}', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+
 def fetch_match_data(start_date, end_date, queue, player_ratings):
     
     game_data = fetch_data(start_date, end_date, queue)
     sorted_game_data = sorted(game_data, key=lambda game: game['timestamp'], reverse=True)
 
+    map_data = load_map_data(queue)
+    
     match_data = [
         {
             'match_id': i+1,
@@ -164,6 +183,7 @@ def fetch_match_data(start_date, end_date, queue, player_ratings):
             ],
             'winning_team': game['winningTeam'],
             'win_probability': calculate_win_probability_for_match(game, player_ratings),
+            'maps': next((entry['maps'] for entry in map_data if game['timestamp'] <= entry['timestamp'] <= game['completionTimestamp']), None)
         }
         for i, game in enumerate(sorted_game_data)
     ]

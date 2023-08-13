@@ -8,6 +8,25 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+    <style>
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: -1;
+            
+            background-image: url("{{ url_for('static', filename='images/dark-background.png') }}");
+            background-attachment: fixed;
+            background-size: 120% 120%;
+            background-repeat: repeat;
+
+            filter: blur(25px); 
+            animation: panBackground 15s infinite;
+        }
+    </style>
     {% block head %}{% endblock %}
 </head>
 <body>

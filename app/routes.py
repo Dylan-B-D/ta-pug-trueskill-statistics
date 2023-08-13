@@ -132,7 +132,7 @@ def team_calculator():
 
 @app.route('/calculate_probability', methods=['POST'])
 def calculate_probability():
-    global player_ratings_global  # Declare the variable as global
+    global player_ratings_global  
     
     team1_ids = request.form.getlist('team1[]')
     team2_ids = request.form.getlist('team2[]')

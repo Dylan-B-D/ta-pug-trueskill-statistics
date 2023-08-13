@@ -31,16 +31,16 @@ $(document).ready(function () {
     updatePlayerClickability();
     $(".match-container td:first-child ul, .match-container td:last-child ul").addClass('tie');
     // Event handler for the reset buttons
-    $(document).on('click', '.reset-team-btn', function() {
+    $(document).on('click', '.reset-team-btn', function () {
         console.log("Reset button clicked!");
-    
+
         let team = $(this).data('team');
-    
+
         // Get all the player IDs in the team
-        let playerIds = $(`#${team}-list li`).map(function() {
+        let playerIds = $(`#${team}-list li`).map(function () {
             return $(this).data('id');
         }).get();
-    
+
         // Remove each player from the team
         for (let playerId of playerIds) {
             removePlayerFromTeam(playerId);
@@ -61,18 +61,18 @@ $(document).ready(function () {
         }
     });
 
-    $('#copy-rebalanced-match').on('click', function() {
+    $('#copy-rebalanced-match').on('click', function () {
         let team1Players = [];
         let team2Players = [];
-        
-        $('#rebalanced-team1-list li').each(function() {
+
+        $('#rebalanced-team1-list li').each(function () {
             team1Players.push($(this).text());
         });
-        
-        $('#rebalanced-team2-list li').each(function() {
+
+        $('#rebalanced-team2-list li').each(function () {
             team2Players.push($(this).text());
         });
-    
+
         // Extract statistics
         let team1TS = $("#rebalanced-teams-container .rebalanced-stats-container.left span:first-child").text();
         let team1Mu = $("#rebalanced-teams-container .rebalanced-stats-container.left span:nth-child(3)").text();
@@ -80,10 +80,10 @@ $(document).ready(function () {
         let team2TS = $("#rebalanced-teams-container .rebalanced-stats-container.right span:first-child").text();
         let team2Mu = $("#rebalanced-teams-container .rebalanced-stats-container.right span:nth-child(3)").text();
         let team2Sigma = $("#rebalanced-teams-container .rebalanced-stats-container.right span:last-child").text();
-    
+
         let team1Chance = $("#rebalanced-teams-container .rebalanced-win-prob-container span:first-child").text();
         let team2Chance = $("#rebalanced-teams-container .rebalanced-win-prob-container span:last-child").text();
-    
+
         // Constructing the ASCII table with Discord-specific formatting (bold)
         let separator = "+------------------------+------------------------+";
         let formattedText = "```" + "\n"; // Start code block for Discord
@@ -95,22 +95,98 @@ $(document).ready(function () {
         formattedText += `| Mu: ${team1Mu.padEnd(19)} | Mu: ${team2Mu.padEnd(19)} |\n`;
         formattedText += `| Sigma: ${team1Sigma.padEnd(16)} | Sigma: ${team2Sigma.padEnd(16)} |\n`;
         formattedText += separator + "\n";
-        
+
         for (let i = 0; i < Math.max(team1Players.length, team2Players.length); i++) {
             let player1 = team1Players[i] || ""; // Fallback to empty string if player doesn't exist
             let player2 = team2Players[i] || "";
             formattedText += `| ${player1.padEnd(24)} | ${player2.padEnd(24)} |\n`; // Pad player names to align nicely
         }
-        
+
         formattedText += separator;
         formattedText += "\n```"; // End code block for Discord
-    
+
         // Copy the formatted text to clipboard
         copyToClipboard(formattedText);
-    
+
         alert("Match copied to clipboard in Discord table format!");
     });
+
+    // Attach click event for locking players
+    $(document).on('click', '.lock-player', function () {
+        // Find the closest element with a data-id attribute
+        let playerLi = $(this).closest('[data-id]');
+        
+        // Get the player's ID from the found element
+        let playerId = playerLi.data('id');
+        
+        // Check if the player is currently locked
+        let isLocked = playerLi.attr('data-locked') === 'true';
+        
+        if (isLocked) {
+            // If locked, unlock
+            $(this).text('🔓').removeClass('locked');
+            updatePlayerLockStatus(playerId, false);
+        } else {
+            // If unlocked, lock
+            $(this).text('🔒').addClass('locked');
+            updatePlayerLockStatus(playerId, true);
+        }
+
+        // Debugging statements
+        const allPlayers = gatherAllPlayers();
+        const lockedPlayers = allPlayers.filter(player => player.locked);
+    });  
+});
+
+function updatePlayerLockStatus(playerId, lockStatus) {
+    // Update the player's locked status in both player lists
+    $(`li[data-id="${playerId}"]`).attr('data-locked', lockStatus.toString());
+}
+// Remove player from a team
+$(document).on('click', '.remove-match-player', function () {
+    let playerRow = $(this).closest('li');
+    let playerId = $(this).data('id');
+
+    // Use the playerId to find the corresponding row in the ranking table
+    let rankingRow = $('.ranking-table tr[data-id="' + playerId + '"]');
+    if (rankingRow.length > 0) {
+        rankingRow.removeClass('greyed-out').addClass('clickable');
+    } else {
+        console.error("Player ranking row NOT found for player ID: " + playerId);
+    }
+
+    // Remove the player from the main team list 
+    $(`#team1-list li[data-id="${playerId}"], #team2-list li[data-id="${playerId}"]`).remove();
     
+    // Set it back to the placeholder in the "Last Match Played" UI
+    playerRow.text('-');
+
+    // Update the statistics for both teams
+    updateMatchStats('team1');
+    updateMatchStats('team2');
+    
+    // Update player clickability and win probabilities
+    updatePlayerClickability();
+    updateWinProbabilities();
+});
+
+
+
+$('#calculate-win-probability').on('click', function () {
+    let team1_ids = [];
+    let team2_ids = [];
+
+    $('#team1-list li').each(function () {
+        team1_ids.push($(this).data('id'));
+    });
+
+    $('#team2-list li').each(function () {
+        team2_ids.push($(this).data('id'));
+    });
+
+    $.post("/calculate_probability", { team1: team1_ids, team2: team2_ids }, function (data) {
+        $('#win-chance-display').text(data.win_probability + '%');
+    });
 });
 
 function copyToClipboard(text) {
@@ -293,19 +369,27 @@ function compareTeamStats() {
 function updateMatchUI(teamId, playerName, playerId, trueskill, mu, sigma) {
     let teamSlot;
     if (teamId === "team1") {
-        teamSlot = $(".match-container td:first-child ul"); // Select the first <ul> for Team 1
+        teamSlot = $(".match-container td:first-child ul"); 
     } else {
-        teamSlot = $(".match-container td:last-child ul"); // Select the last <ul> for Team 2
+        teamSlot = $(".match-container td:last-child ul"); 
     }
 
     let slotFound = false;
     teamSlot.find('li').each(function() {
         if ($(this).text() === "-" && !slotFound) {
-            $(this).html(`${playerName} <button class="remove-match-player" data-id="${playerId}">X</button>`);
+            $(this).attr('data-id', playerId).html(`<button class="lock-player">🔓</button> ${playerName} <button class="remove-match-player" data-id="${playerId}">X</button>`);
+            
+            // Ensure every player gets the data-locked attribute when they're added
+            $(this).attr('data-locked', 'false');
+            
             slotFound = true;
         }
     });
 }
+
+
+
+
 function sumTrueskill(team) {
         return team.reduce((sum, player) => sum + player.trueskill, 0);
 }
@@ -328,17 +412,22 @@ function balanceTeamsOptimized(players) {
     let bestTeam1 = [];
     let bestTeam2 = [];
 
+    const lockedTeam1Players = players.filter(player => player.locked && $(`#team1-list li[data-id="${player.id}"]`).length > 0);
+    const lockedTeam2Players = players.filter(player => player.locked && $(`#team2-list li[data-id="${player.id}"]`).length > 0);
+    const unlockedPlayers = players.filter(player => !player.locked);
+
     const maxTeamSize = Math.min(7, Math.floor(players.length / 2));
-    for (let teamSize = 1; teamSize <= maxTeamSize; teamSize++) {
-        const team1Combinations = generateCombinations(players, teamSize);
+    for (let teamSize = lockedTeam1Players.length; teamSize <= maxTeamSize; teamSize++) {
+        const team1Combinations = generateCombinations(unlockedPlayers, teamSize - lockedTeam1Players.length);
 
         for (const team1 of team1Combinations) {
-            const team2 = players.filter(player => !team1.includes(player));
-            const difference = Math.abs(sumTrueskill(team1) - sumTrueskill(team2));
+            const fullTeam1 = team1.concat(lockedTeam1Players);
+            const team2 = unlockedPlayers.filter(player => !team1.includes(player)).concat(lockedTeam2Players);
+            const difference = Math.abs(sumTrueskill(fullTeam1) - sumTrueskill(team2));
 
             if (difference < bestDifference) {
                 bestDifference = difference;
-                bestTeam1 = team1;
+                bestTeam1 = fullTeam1;
                 bestTeam2 = team2;
             }
         }
@@ -350,21 +439,25 @@ function balanceTeamsOptimized(players) {
     };
 }
 
+
 // Function to gather all players from both teams
 function gatherAllPlayers() {
     let allPlayers = [];
     $('#team1-list li, #team2-list li').each(function () {
-        let playerId = $(this).data('id');
-        let playerTrueskill = $(this).data('trueskill');
-        let playerMu = $(this).data('mu');
-        let playerSigma = $(this).data('sigma');
-        let playerName = $(this).find('.player-name').text();
+        let playerLi = this; // Direct reference to the li DOM element
+        let playerId = playerLi.getAttribute('data-id');
+        let isLocked = playerLi.getAttribute('data-locked') === 'true';
+        let playerTrueskill = $(playerLi).data('trueskill');
+        let playerMu = $(playerLi).data('mu');
+        let playerSigma = $(playerLi).data('sigma');
+        let playerName = $(playerLi).find('.player-name').text();
         allPlayers.push({
             id: playerId, 
             trueskill: playerTrueskill, 
             mu: playerMu,
             sigma: playerSigma,
-            name: playerName
+            name: playerName,
+            locked: isLocked
         });
     });
     return allPlayers;
@@ -372,27 +465,40 @@ function gatherAllPlayers() {
 
 // Function to update the rebalanced teams' UI
 function updateRebalancedTeamsUI(rebalancedTeam1, rebalancedTeam2) {
+    // Sort each team by trueskill rating
+    rebalancedTeam1.sort((a, b) => b.trueskill - a.trueskill);
+    rebalancedTeam2.sort((a, b) => b.trueskill - a.trueskill);
+    
     // Clear the rebalanced teams containers
     $('#rebalanced-team1-list li, #rebalanced-team2-list li').text('-');
+    $('#rebalanced-team1-list li, #rebalanced-team2-list li').removeClass('switched-player');
 
     rebalancedTeam1.forEach(player => {
+        let originalTeam = $(`#team1-list li[data-id="${player.id}"]`).length > 0 ? 'team1' : 'team2';
         let playerName = $(`#team1-list li[data-id="${player.id}"], #team2-list li[data-id="${player.id}"]`).find('.player-name').text();
         let nextSlot = $('#rebalanced-team1-list li').filter(function() {
             return $(this).text() === '-';
         }).first();
-    
+
         if (nextSlot.length > 0) {
+            if (originalTeam === 'team2') {
+                nextSlot.addClass('switched-player');
+            }
             nextSlot.text(playerName);
         }
     });
-    
+
     rebalancedTeam2.forEach(player => {
+        let originalTeam = $(`#team1-list li[data-id="${player.id}"]`).length > 0 ? 'team1' : 'team2';
         let playerName = $(`#team1-list li[data-id="${player.id}"], #team2-list li[data-id="${player.id}"]`).find('.player-name').text();
         let nextSlot = $('#rebalanced-team2-list li').filter(function() {
             return $(this).text() === '-';
         }).first();
-    
+
         if (nextSlot.length > 0) {
+            if (originalTeam === 'team1') {
+                nextSlot.addClass('switched-player');
+            }
             nextSlot.text(playerName);
         }
     });
@@ -400,6 +506,7 @@ function updateRebalancedTeamsUI(rebalancedTeam1, rebalancedTeam2) {
     updateRebalancedMatchStats(rebalancedTeam1, "rebalanced-team1-list");
     updateRebalancedMatchStats(rebalancedTeam2, "rebalanced-team2-list");
 }
+
 
 // Function to calculate win chances and update the UI
 function calculateRebalancedWinChances(rebalancedTeam1, rebalancedTeam2) {
@@ -442,15 +549,27 @@ function calculateRebalancedWinChances(rebalancedTeam1, rebalancedTeam2) {
 $('#rebalance-teams').on('click', function () {
     let allPlayers = gatherAllPlayers();
 
+    // Get the original team1 player IDs for comparison later
+    const originalTeam1Ids = $('#team1-list li').map(function() {
+        return $(this).data('id');
+    }).get();
+
     // Sort players by trueskill rating
     allPlayers.sort((a, b) => b.trueskill - a.trueskill);
 
-    const { team1: rebalancedTeam1, team2: rebalancedTeam2 } = balanceTeamsOptimized(allPlayers);
+    let { team1: rebalancedTeam1, team2: rebalancedTeam2 } = balanceTeamsOptimized(allPlayers);
+
+    // Check how many players from the original team1 remain in the rebalanced team1
+    const countRetainedInTeam1 = rebalancedTeam1.filter(player => originalTeam1Ids.includes(player.id)).length;
+
+    // If more than half of team1 players were switched, swap the two teams
+    if (countRetainedInTeam1 < originalTeam1Ids.length / 2) {
+        [rebalancedTeam1, rebalancedTeam2] = [rebalancedTeam2, rebalancedTeam1];
+    }
 
     updateRebalancedTeamsUI(rebalancedTeam1, rebalancedTeam2);
     calculateRebalancedWinChances(rebalancedTeam1, rebalancedTeam2);
 });
-
 
 function compareRebalancedTeamStats() {
     // Extract average stats for both rebalanced teams
@@ -525,52 +644,7 @@ function updateRebalancedMatchStats(rebalancedTeam, teamContainerId) {
 }
 
 
-// Remove player from a team
-$(document).on('click', '.remove-match-player', function () {
-    let playerRow = $(this).closest('li');
-    let playerId = $(this).data('id');
 
-    // Use the playerId to find the corresponding row in the ranking table
-    let rankingRow = $('.ranking-table tr[data-id="' + playerId + '"]');
-    if (rankingRow.length > 0) {
-        rankingRow.removeClass('greyed-out').addClass('clickable');
-    } else {
-        console.error("Player ranking row NOT found for player ID: " + playerId);
-    }
-
-    // Remove the player from the main team list 
-    $(`#team1-list li[data-id="${playerId}"], #team2-list li[data-id="${playerId}"]`).remove();
-    
-    // Set it back to the placeholder in the "Last Match Played" UI
-    playerRow.text('-');
-
-    // Update the statistics for both teams
-    updateMatchStats('team1');
-    updateMatchStats('team2');
-    
-    // Update player clickability and win probabilities
-    updatePlayerClickability();
-    updateWinProbabilities();
-});
-
-
-
-$('#calculate-win-probability').on('click', function () {
-    let team1_ids = [];
-    let team2_ids = [];
-
-    $('#team1-list li').each(function () {
-        team1_ids.push($(this).data('id'));
-    });
-
-    $('#team2-list li').each(function () {
-        team2_ids.push($(this).data('id'));
-    });
-
-    $.post("/calculate_probability", { team1: team1_ids, team2: team2_ids }, function (data) {
-        $('#win-chance-display').text(data.win_probability + '%');
-    });
-});
 
 function updatePlayerClickability() {
     // Get all player IDs currently in teams

@@ -182,7 +182,7 @@ table tr {
 .main-wrapper {
     display: flex;
     height: 100%; 
-    padding: 2% 5%; /* Top padding and side padding */
+    padding: 2% 5%; 
     flex-direction: row;
     align-items: flex-start;
 }
@@ -193,7 +193,7 @@ table tr {
     display: flex;
     flex-direction: column;
     align-self: flex-start; 
-    flex-basis: 70%; /* Take up 70% of the horizontal space */
+    flex-basis: 70%; 
 }
 
 .match-container {
@@ -201,7 +201,6 @@ table tr {
     justify-content: center;
     align-items: center;
     height: 100%; 
-    /* margin-right: 5%; */ /* Remove or reduce this */
 }
 
 
@@ -210,7 +209,7 @@ table tr {
 }
 
 .greyed-out {
-    background-color: #661b1b;
+    background-color: #833636a8;
     cursor: not-allowed;
 }
 .table-container table tr.greyed-out:hover {
@@ -220,14 +219,14 @@ table tr {
 .clickable {
     cursor: pointer;
 }
-/* Remove player button styling */
+
 .remove-player, .remove-match-player {
-    background-color: #e74c3c; /* red color */
-    color: #ffffff; /* white color */
+    background-color: #e74c3c; 
+    color: #ffffff; 
     border-radius: 4px;
     font-weight: bold;
     font-size: 14px;
-    margin-left: 8px; /* space it a bit from the player name */
+    margin-left: 8px;
     display: inline-block;
     vertical-align: middle;
     border: none;
@@ -240,29 +239,57 @@ table tr {
 }
 
 .remove-player:hover, .remove-match-player:hover {
-    background-color: #c0392b; /* slightly darker red on hover */
+    background-color: #b351468a; 
 }
 
-/* Ensure the button doesn't look too large in a list */
+.lock-player {
+    background-color: #e9e6cc; 
+    color: #ffffff; 
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 14px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    position: absolute;
+    left: -4px; /* Adjust this value to change the distance from the left edge */
+    top: 50%; /* center it vertically */
+    transform: translateY(-50%);
+}
+.lock-player:hover {
+    background-color: white;
+}
+
+
+.locked {
+    background-color: #177433; 
+}
+.locked:hover {
+    background-color: #33a856; 
+}
+
+
 .player-list .remove-player, .player-list .remove-match-player {
     font-size: 12px;
     padding: 2px 6px;
 }
 .reset-team-btn {
-    background-color: var(--dark-blue);
+    background-color: rgba(255, 255, 255, 0.219);
     color: #FFF;
     border: none; 
     border-style: solid;
     border-width: 1px;
-    border-color: #2b2b2b;
-    border-radius: 4px;
+    border-color: rgba(245, 222, 179, 0.199);
+    background-color: 444444;
+    border-radius: 50%;
     cursor: pointer;
     font-weight: bold;
-    font-size: 1.5em;
+    font-size: 1em;
 }
 
 .reset-team-btn:hover {
-    background-color: #232836;
+    background-color: #4d855e;
+    box-shadow: 0 0 5px #aaa;
 }
 
 .ranking-table td.move-cell {
@@ -275,7 +302,10 @@ table tr {
     border: none;
     box-sizing: border-box;
     padding: 8px; 
-    background-color: #9b9b9b;
+    border-style: solid;
+    border-color: rgba(245, 222, 179, 0.199);
+    background-color: rgba(245, 222, 179, 0.144);
+    border-width: 1px;
     font-weight: bold;
     color:var(--text-color);
 }
@@ -297,3 +327,9 @@ table tr {
     border-bottom-left-radius: 0;
 }
 
+.switched-player {
+    color: var(--text-color);
+    font-weight: bold;
+    background-color: #661b1b;
+    border-radius: 8px;
+}

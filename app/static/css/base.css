@@ -1,7 +1,7 @@
 :root {
     --bg-color: #222222; 
     --text-color: #dddddd; 
-    --secondary-color: #444444; 
+    --secondary-color: #8a8a8a44; 
     --header-bg-color: #507c8b; 
     --secondary-highlight:#507c8b;
     --dark-blue: #143b49;
@@ -27,7 +27,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-radius: 0px 0px 10px 10px; 
+    border-radius: 10px 10px 10px 10px; 
     background: linear-gradient(45deg, #143b49 65%, var(--secondary-highlight) 35%);
 }
 
@@ -72,4 +72,21 @@ nav ul li:last-child a {
 /* Hover effect */
 nav ul li a:hover {
     filter:grayscale();
+}
+@keyframes panBackground {
+    0% {
+        background-position: 0% 0%;
+    }
+    25% {
+        background-position: 15% 15%;
+    }
+    50% {
+        background-position: 20% 5%;
+    }
+    75% {
+        background-position: 0% 15%;
+    }
+    100% {
+        background-position: 0% 0%;
+    }
 }

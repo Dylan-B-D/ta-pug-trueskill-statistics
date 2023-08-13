@@ -124,7 +124,7 @@ input[type="number"]::-webkit-outer-spin-button {
 #reset_button {
     padding: 10px 20px;
     background-color: var(--text-color);
-    color: var(--secondary-color);
+    color: #444444;
     text-decoration: none;
     border: none;
     border-radius: 8px;

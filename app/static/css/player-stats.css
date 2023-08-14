@@ -1,0 +1,224 @@
+/* Grid container */
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* Three equally sized columns */
+    gap: 20px; /* Gap between columns and rows */
+    max-width: 80%; /* Width of the grid container */
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Style for individual grid items */
+.grid-item {
+    padding: 20px;
+    background-color: var(--secondary-color);;
+    border-radius: 8px;
+    border: 2px solid var(--secondary-highlight);
+}
+
+.initially-hidden {
+    display: none;
+}
+
+.player-search-form {
+    text-align: center;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.search-container {
+    width: 35%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.map-wins-container, #queue, #team, table {
+    border-radius: 8px;
+    background-color: rgba(42, 42, 42, 0.5);
+}
+
+.map-wins-container {
+    max-width: 800px;
+    background-color: var(--secondary-color);
+    padding: 20px;
+    border: 2px solid var(--secondary-highlight);
+}
+
+#player_search {
+    width: 100%;
+    font-weight: bold;
+    margin: 0 auto;
+    background-color: var(--bg-color-light);
+    border: 2px solid var(--secondary-highlight);
+    color: #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    transition: background-color 0.3s, border 0.3s;
+}
+
+#player_search:hover {
+
+    background-color: var(--bg-color-hover);
+}
+
+#player_search:focus {
+    background-color: var(--bg-color-focus);
+    outline: none;
+
+}
+
+#player_search:focus:hover {
+    background-color: var(--bg-color-focus-hover);
+}
+
+.ui-autocomplete {
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: rgba(121, 121, 121, 0.288);
+    border: solid var(--secondary-highlight);
+    border-width: 2px;;
+    border-radius: 4px;
+    color: #ddd;
+    backdrop-filter: blur(10px);
+}
+
+.ui-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.ui-menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
+    border: none;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+/* Override lingering focus effects */
+.ui-autocomplete .ui-menu-item-wrapper.ui-state-focus, 
+.ui-autocomplete .ui-menu-item-wrapper.ui-state-active,
+.ui-autocomplete .ui-menu-item-wrapper:focus {
+    background-color: transparent !important;
+    outline-color: transparent;
+    border-color: transparent;
+}
+.ui-autocomplete li.ui-menu-item {
+    border: none !important;
+}
+/* For Webkit browsers like Chrome and Safari */
+.ui-autocomplete::-webkit-scrollbar {
+    width: 8px; /* Adjust width of the vertical scrollbar */
+    height: 8px; /* Adjust height of the horizontal scrollbar */
+}
+
+/* Scrollbar Styles */
+.ui-autocomplete::-webkit-scrollbar {
+    width: 8px; /* Adjust width of the vertical scrollbar */
+    height: 8px; /* Adjust height of the horizontal scrollbar */
+}
+
+.ui-autocomplete::-webkit-scrollbar-track {
+    background-color: #ffffff7a; /* Color of the track */
+    border-radius: 4px; /* Roundness of the track */
+}
+
+/* For Firefox */
+.ui-autocomplete {
+    scrollbar-width: thin; /* Makes the scrollbar thinner */
+    scrollbar-color: var(--text-color) #41414177; /* Colors for thumb and track */
+}
+
+/* Dropdown filters styling */
+.filters-form {
+    margin-bottom: 20px;
+}
+
+#queue, #team {
+    border: 2px solid var(--secondary-highlight);
+    color: var(--text-color);
+    padding: 8px 12px;
+    margin: 5px 0;
+    font-size: 1em;
+    cursor: pointer;
+}
+
+#queue:hover, #team:hover {
+    background-color: rgba(56, 56, 56, 0.9);
+}
+
+#queue:focus:hover, #team:focus:hover {
+    background-color: rgba(36, 36, 36, 0.74);
+    border: solid var(--secondary-highlight);
+    border-width: 2px;
+    border-radius: 8px;
+    color: #ddd;
+    backdrop-filter: blur(10px);
+}
+
+#queue_label {
+    color: var(--text-color);
+    margin-right: 10px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 2px;
+    background-color: transparent;
+    border-radius: 8px; 
+    overflow: hidden;
+    box-shadow: 0px 0px 8px rgba(5, 5, 5, 0.4);
+}
+
+thead {
+    /* No background color here */
+}
+
+thead th:first-child {
+    border-top-left-radius: 8px; /* Top left corner of the table */
+    background-color: var(--secondary-highlight);
+}
+
+thead th:last-child {
+    border-top-right-radius: 8px; /* Top right corner of the table */
+    background-color: var(--secondary-highlight);
+}
+
+/* For all other header cells */
+thead th {
+    background-color: var(--secondary-highlight);
+}
+
+tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 8px; /* Bottom left corner of the table */
+}
+
+tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 8px; /* Bottom right corner of the table */
+}
+
+th, td {
+    padding: 10px;
+    border: none;
+    text-align: left;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+th {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+tbody tr:hover {
+    background-color: rgba(184, 184, 184, 0.301);
+}
+
+.player-name-container{
+    text-align: center;
+    font-weight: bold;
+}

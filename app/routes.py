@@ -157,11 +157,15 @@ def autocomplete_player():
 
 @app.route('/player_stats', methods=['GET', 'POST'])
 def player_stats():
-    player_data = None
-    if request.method == 'POST':
-        player_name = request.form.get('player_search')
-        queue = request.form.get('queue', 'NA')
-        team = request.form.get('team', '0')
+    player_name = request.args.get('player_search') or request.form.get('player_search')
+    
+    if player_name:
+        queue = request.args.get('queue', 'NA') or request.form.get('queue', 'NA')
+        team = request.args.get('team', '0') or request.form.get('team', '0')
         player_data = player_win_rate_on_maps(player_name, queue, team)
+    else:
+        player_data = None
+        player_name = None  # Make sure to set player_name to None if not present
 
-    return render_template('player_stats.html', player_stats=player_data)
+    # Use the current filters when redirecting
+    return render_template('player_stats.html', player_stats=player_data, player_name=player_name)

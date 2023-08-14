@@ -1,51 +1,116 @@
 {% extends "base.html" %}
 
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/player-stats.css') }}">
+{% endblock %}
+
 {% block content %}
-    <form action="{{ url_for('player_stats') }}" method="post">
-        <label for="player_search">Player Search:</label>
-        <input type="text" name="player_search" id="player_search">
+    <div class="search-container">
+        <form action="{{ url_for('player_stats') }}" method="post" class="player-search-form">
+            <input type="text" id="player_search" placeholder="Search for a player..." />
+        </form>
+    </div>
 
-        <label for="queue">Queue:</label>
-        <select name="queue" id="queue">
-            <option value="NA">NA</option>
-            <option value="EU">EU</option>
-            <option value="Other">Other</option>
-        </select>
+    <div class="grid-container {% if not request.args.get('player_search') %}initially-hidden{% endif %}">
+        <!-- First row containers -->
+        <div class="grid-item player-graphs-container"></div>
+        <div class="grid-item player-name-container">
+            {{ player_name }}
+        </div>        
+        <div class="grid-item player-icon-container"></div>
 
-        <label for="team">Team:</label>
-        <select name="team" id="team">
-            <option value="0">Any</option>
-            <option value="1">Team 1</option>
-            <option value="2">Team 2</option>
-        </select>
+        <!-- Second row containers -->
+        <div class="grid-item map-wins-container">
+            <!-- The content of map-wins-container -->
+            <form action="{{ url_for('player_stats', player_search=request.args.get('player_search')) }}" method="post" class="filters-form" id="filtersForm">
+                <select name="queue" id="queue" onchange="submitWithFilters()">
+                    <option value="NA" {% if request.args.get('queue', 'NA') == 'NA' %}selected{% endif %}>NA</option>
+                    <option value="EU" {% if request.args.get('queue') == 'EU' %}selected{% endif %}>EU</option>
+                    <option value="2v2" {% if request.args.get('queue') == '2v2' %}selected{% endif %}>2v2</option>
+                </select>
+                
+                <select name="team" id="team" onchange="submitWithFilters()">
+                    <option value="0" {% if request.args.get('team', '0') == '0' %}selected{% endif %}>Any</option>
+                    <option value="1" {% if request.args.get('team') == '1' %}selected{% endif %}>Diamond Sword</option>
+                    <option value="2" {% if request.args.get('team') == '2' %}selected{% endif %}>Blood Eagle</option>
+                </select>            
+            </form>
+            
+            {% if player_stats and player_stats|length > 0 %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Map</th>
+                            <th>Win Rate</th>
+                            <th>Wins</th>
+                            <th>Losses</th>
+                            <th>Tie</th>
+                            <th>Total Games</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for map_name, stats in player_stats.items() %}
+                            <tr>
+                                <td>{{ map_name }}</td>
+                                <td>{{ stats['win_rate'] }}%</td>
+                                <td>{{ stats['wins'] }}</td>
+                                <td>{{ stats['losses'] }}</td>
+                                <td>{{ stats['ties'] }}</td>
+                                <td>{{ stats['total_games'] }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No data available for the selected player and filters.</p>
+            {% endif %}
+        </div>
+        <div class="grid-item match-history-container"></div>
+        <div class="grid-item general-stats-container"></div>
+    </div>
 
-        <button type="submit">Search</button>
-    </form>
+    <!-- JS script remains the same -->
+    <script>
+        $(document).ready(function() {
+            $("#player_search").autocomplete({
+                source: function(request, response) {
+                    $.ajax({
+                        url: "/autocomplete_player",
+                        dataType: "json",
+                        data: {
+                            term: request.term
+                        },
+                        success: function(data) {
+                            response(data);
+                        }
+                    });
+                },
+                select: function(event, ui) {
+                    var playerName = ui.item.value;
+                    var queueSelection = document.getElementById('queue').value;
+                    var teamSelection = document.getElementById('team').value;
 
-    {% if player_stats and player_stats|length > 0 %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Map</th>
-                    <th>Win Rate</th>
-                    <th>Wins</th>
-                    <th>Losses</th>
-                    <th>Tie</th>
-                    <th>Total Games</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for map_name, stats in player_stats.items() %}
-                    <tr>
-                        <td>{{ map_name }}</td>
-                        <td>{{ stats['win_rate'] }}%</td>
-                        <td>{{ stats['wins'] }}</td>
-                        <td>{{ stats['losses'] }}</td>
-                        <td>{{ stats['ties'] }}</td>
-                        <td>{{ stats['total_games'] }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+                    window.location.href = "/player_stats?player_search=" + playerName + "&queue=" + queueSelection + "&team=" + teamSelection;
+                }
+            });
+
+            // Focus on the input field on page load
+            $("#player_search").focus();
+        });
+
+
+        function submitWithFilters() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var playerSearch = urlParams.get('player_search'); // Get player_search from the current URL
+
+            var queueSelection = document.getElementById('queue').value;
+            var teamSelection = document.getElementById('team').value;
+
+            // Update the form's action URL with the new values
+            document.getElementById('filtersForm').action = "/player_stats?player_search=" + playerSearch + "&queue=" + queueSelection + "&team=" + teamSelection;
+
+            // Submit the form
+            document.getElementById('filtersForm').submit();
+        }
+    </script>
 {% endblock %}

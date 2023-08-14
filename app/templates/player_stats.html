@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form action="{{ url_for('player_stats') }}" method="post">
+        <label for="player_search">Player Search:</label>
+        <input type="text" name="player_search" id="player_search">
+
+        <label for="queue">Queue:</label>
+        <select name="queue" id="queue">
+            <option value="NA">NA</option>
+            <option value="EU">EU</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label for="team">Team:</label>
+        <select name="team" id="team">
+            <option value="0">Any</option>
+            <option value="1">Team 1</option>
+            <option value="2">Team 2</option>
+        </select>
+
+        <button type="submit">Search</button>
+    </form>
+
+    {% if player_stats and player_stats|length > 0 %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Map</th>
+                    <th>Win Rate</th>
+                    <th>Wins</th>
+                    <th>Losses</th>
+                    <th>Tie</th>
+                    <th>Total Games</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for map_name, stats in player_stats.items() %}
+                    <tr>
+                        <td>{{ map_name }}</td>
+                        <td>{{ stats['win_rate'] }}%</td>
+                        <td>{{ stats['wins'] }}</td>
+                        <td>{{ stats['losses'] }}</td>
+                        <td>{{ stats['ties'] }}</td>
+                        <td>{{ stats['total_games'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

@@ -4,6 +4,7 @@ import json
 import trueskill
 from datetime import datetime
 from app.player_mappings import player_name_mapping
+from app.map_name_mapping import map_name_mapping
 import math
 from math import erf, sqrt
 
@@ -188,7 +189,152 @@ def fetch_match_data(start_date, end_date, queue, player_ratings):
         for i, game in enumerate(sorted_game_data)
     ]
 
+    # Apply map name mapping
+    for match in match_data:
+        if match['maps']:
+            match['maps'] = [map_name_mapping.get(map_name, map_name) for map_name in match['maps']]
+
     return match_data
+
+
+def calculate_win_rate_on_map_for_team(queue, map_name):
+    # 1. Fetch match data for the specified queue
+    player_ratings, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), queue), queue)
+    match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), queue, player_ratings)
+
+    # 2. Filter for matches on the specified map
+    matches_on_map = [match for match in match_data if match['maps'] and map_name in match['maps']]
+
+    # Count wins, ties, and losses for Team 1
+    team1_wins = sum(1 for match in matches_on_map if match['winning_team'] == 1)
+    ties = sum(1 for match in matches_on_map if match['winning_team'] == 0)
+    team1_losses = sum(1 for match in matches_on_map if match['winning_team'] == 2)
+    
+    total_games_excluding_ties = team1_wins + team1_losses
+    win_rate = team1_wins / total_games_excluding_ties * 100 if total_games_excluding_ties > 0 else 0
+
+    return {
+        'win_rate': win_rate,
+        'wins': team1_wins,
+        'ties': ties,
+        'losses': team1_losses,
+        'total_games': len(matches_on_map)
+    }
+
+# eu_stats = calculate_win_rate_on_map_for_team('EU', 'ss')
+# na_stats = calculate_win_rate_on_map_for_team('NA', 'sunstar')
+
+# print(f"Statistics for DS on Sunstar (EU):")
+# print(f"Win rate: {eu_stats['win_rate']:.2f}%")
+# print(f"Wins: {eu_stats['wins']}")
+# print(f"Ties: {eu_stats['ties']}")
+# print(f"Losses: {eu_stats['losses']}")
+# print(f"Total games: {eu_stats['total_games']}")
+# print("")
+
+# print(f"Statistics for DS on Sunstar (NA):")
+# print(f"Win rate: {na_stats['win_rate']:.2f}%")
+# print(f"Wins: {na_stats['wins']}")
+# print(f"Ties: {na_stats['ties']}")
+# print(f"Losses: {na_stats['losses']}")
+# print(f"Total games: {na_stats['total_games']}")
+
+
+def compute_average_captain_time(queue):
+    # Load game data and map data
+    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), queue)
+    map_data = load_map_data(queue)
+
+    captain_times = {}  # Store the cumulative captain time for each player
+    captain_counts = {}  # Store the number of times each player captained
+
+    for game in game_data:
+        # Check if the player was a captain and find the corresponding map timestamp
+        for player in game['players']:
+            if player['captain']:
+                # Find the subsequent timestamp for the end of the match
+                subsequent_timestamps = [entry['timestamp'] for entry in map_data if entry['timestamp'] > game['timestamp']]
+                if subsequent_timestamps:
+                    closest_subsequent_timestamp = min(subsequent_timestamps)
+                    time_taken = (closest_subsequent_timestamp - game['timestamp']) / (60 * 1000)  # Convert to minutes
+                    # Ensure the time taken is within a reasonable timeframe (e.g., 20 minutes)
+                    if 0 <= time_taken <= 30:
+                        player_name = player['user']['name']
+                        captain_times[player_name] = captain_times.get(player_name, 0) + time_taken
+                        captain_counts[player_name] = captain_counts.get(player_name, 0) + 1
+
+    # Compute average captain time for each player
+    average_captain_times = {player: total_time / captain_counts[player] for player, total_time in captain_times.items()}
+    
+    # Sort by average captain time, from longest to shortest
+    sorted_times = sorted(average_captain_times.items(), key=lambda x: x[1], reverse=True)
+
+    # Print the results
+    for player, avg_time in sorted_times:
+        print(f"{player}: {avg_time:.2f} minutes ({captain_counts[player]} times captained)")
+
+# compute_average_captain_time('EU')
+
+def player_win_rate_on_maps(player_name, queue, team="0"):
+    # 1. Fetch match data for the specified queue
+    player_ratings, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), queue), queue)
+    match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), queue, player_ratings)
+
+    # 2. Filter for matches the player participated in based on the specified team
+    if team == "0":
+        player_matches = [match for match in match_data if any(player['user']['name'] == player_name for player in match['teams'][0] + match['teams'][1])]
+    else:
+        team_index = int(team) - 1
+        player_matches = [match for match in match_data if any(player['user']['name'] == player_name for player in match['teams'][team_index])]
+
+    # 3. Calculate win/loss/ties for each map
+    map_winloss = {}
+    for match in player_matches:
+        if not match['maps']:
+            continue
+
+        for map_name in match['maps']:
+            if map_name not in map_winloss:
+                map_winloss[map_name] = {'wins': 0, 'losses': 0, 'ties': 0, 'total_games': 0}
+
+            # Determine if the player was on the winning team, losing team or it was a tie
+            if match['winning_team'] == 0:  # it's a tie
+                map_winloss[map_name]['ties'] += 1
+            elif any(player['user']['name'] == player_name for player in match['teams'][match['winning_team'] - 1]):
+                map_winloss[map_name]['wins'] += 1
+            else:
+                map_winloss[map_name]['losses'] += 1
+
+            map_winloss[map_name]['total_games'] += 1
+
+    # 4. Calculate win rate for each map and sort by win rate
+    map_winrates = {
+        map_name: {
+            'win_rate': (data['wins'] / (data['wins'] + data['losses'])) * 100 if (data['wins'] + data['losses']) > 0 else 0,
+            'wins': data['wins'],
+            'losses': data['losses'],
+            'ties': data['ties'],
+            'total_games': data['total_games']
+        }
+        for map_name, data in map_winloss.items()
+    }
+    sorted_winrates = sorted(map_winrates.items(), key=lambda item: (
+        -1 if item[1]['total_games'] > 15 else item[1]['total_games'], 
+        -item[1]['win_rate']
+    ))
+
+    return {
+        map_name: {
+            'win_rate': "{:.1f}".format(data['win_rate']),
+            'wins': data['wins'],
+            'losses': data['losses'],
+            'ties': data['ties'],
+            'total_games': data['total_games']
+        }
+        for map_name, data in sorted_winrates
+    }
+
+
 
 def augment_match_data_with_trueskill(match_data, player_ratings):
     for match in match_data:

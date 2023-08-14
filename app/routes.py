@@ -1,5 +1,5 @@
 from flask import render_template, request, jsonify
-from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill, calculate_win_probability_for_match
+from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill, calculate_win_probability_for_match, player_win_rate_on_maps
 from datetime import datetime
 from app import app
 from app.player_mappings import player_name_mapping
@@ -155,3 +155,13 @@ def autocomplete_player():
     matching_players = [name for id, name in player_name_mapping.items() if term.lower() in name.lower()]
     return jsonify(matching_players)
 
+@app.route('/player_stats', methods=['GET', 'POST'])
+def player_stats():
+    player_data = None
+    if request.method == 'POST':
+        player_name = request.form.get('player_search')
+        queue = request.form.get('queue', 'NA')
+        team = request.form.get('team', '0')
+        player_data = player_win_rate_on_maps(player_name, queue, team)
+
+    return render_template('player_stats.html', player_stats=player_data)

@@ -19,7 +19,63 @@ $(document).ready(function () {
         }
     });
 
-
+    $(document).keypress(function(event) {
+        // Check if the search input is not already in focus
+        if (!$('#player_search').is(':focus')) {
+            // Append the character to the search input
+            $('#player_search').val($('#player_search').val() + String.fromCharCode(event.which));
+            
+            // Trigger the search function (this assumes you have a function for this)
+            $('#player_search').trigger('keyup');
+        }
+    });
+    
+    $(document).keydown(function(event) {
+        if (!$('#player_search').is(':focus')) {
+            if (event.which === 8) { // Check for backspace key
+                // Remove the last character from the search input
+                $('#player_search').val($('#player_search').val().slice(0, -1));
+                
+                // Trigger the search function (this assumes you have a function for this)
+                $('#player_search').trigger('keyup');
+                
+                // Prevent the default action (going back in browser history)
+                event.preventDefault();
+            }
+        }
+    });
+    $(document).keydown(function(event) {
+        let topVisiblePlayer;
+        let moveButton;
+    
+        // Check if the right arrow key is pressed
+        if (event.which === 39) {
+            // Get the top-most visible player from the filtered list
+            topVisiblePlayer = $('.ranking-table tr:visible').not(':first').first();
+            if (topVisiblePlayer.length) {
+                // Get the move button for Team 2 for this player
+                moveButton = topVisiblePlayer.find('.move-button[data-target="team2"]');
+                if (moveButton.length) {
+                    moveButton.click();
+                }
+            }
+        }
+    
+        // Check if the left arrow key is pressed
+        if (event.which === 37) {
+            // Get the top-most visible player from the filtered list
+            topVisiblePlayer = $('.ranking-table tr:visible').not(':first').first();
+            if (topVisiblePlayer.length) {
+                // Get the move button for Team 1 for this player
+                moveButton = topVisiblePlayer.find('.move-button[data-target="team1"]');
+                if (moveButton.length) {
+                    moveButton.click();
+                }
+            }
+        }
+    });
+    
+    
     // Attach event handlers to the move buttons
     $('#move_to_team1').on('click', function () {
         moveToTeam('team1');
@@ -32,7 +88,6 @@ $(document).ready(function () {
     $(".match-container td:first-child ul, .match-container td:last-child ul").addClass('tie');
     // Event handler for the reset buttons
     $(document).on('click', '.reset-team-btn', function () {
-        console.log("Reset button clicked!");
 
         let team = $(this).data('team');
 
@@ -406,6 +461,27 @@ function generateCombinations(players, teamSize, startIndex = 0, currentTeam = [
 
     return withCurrentPlayer.concat(withoutCurrentPlayer);
 }
+function gatherAllPlayersFromTeam(teamContainerId) {
+    let teamPlayers = [];
+    $(`#${teamContainerId} li`).each(function() {
+        let playerLi = this; // Direct reference to the li DOM element
+        let playerId = playerLi.getAttribute('data-id');
+        let isLocked = playerLi.getAttribute('data-locked') === 'true';
+        let playerTrueskill = $(playerLi).data('trueskill');
+        let playerMu = $(playerLi).data('mu');
+        let playerSigma = $(playerLi).data('sigma');
+        let playerName = $(playerLi).find('.player-name').text();
+        teamPlayers.push({
+            id: playerId, 
+            trueskill: playerTrueskill, 
+            mu: playerMu,
+            sigma: playerSigma,
+            name: playerName,
+            locked: isLocked
+        });
+    });
+    return teamPlayers;
+}
 
 function balanceTeamsOptimized(players) {
     let bestDifference = Infinity;
@@ -423,6 +499,11 @@ function balanceTeamsOptimized(players) {
         for (const team1 of team1Combinations) {
             const fullTeam1 = team1.concat(lockedTeam1Players);
             const team2 = unlockedPlayers.filter(player => !team1.includes(player)).concat(lockedTeam2Players);
+
+            if (Math.abs(fullTeam1.length - team2.length) > 1) {
+                continue;
+            }
+
             const difference = Math.abs(sumTrueskill(fullTeam1) - sumTrueskill(team2));
 
             if (difference < bestDifference) {

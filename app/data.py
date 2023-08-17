@@ -5,7 +5,6 @@ import trueskill
 from datetime import datetime, timedelta
 from app.player_mappings import player_name_mapping
 from app.map_name_mapping import map_name_mapping
-import math
 import time
 from math import erf, sqrt
 import matplotlib.pyplot as plt

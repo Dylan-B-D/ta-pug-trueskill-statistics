@@ -6,14 +6,14 @@
     max-width: 80%; /* Width of the grid container */
     margin: 50px auto;
     padding: 20px;
-    border-radius: 8px;
+    border-radius: 4px;
 }
 
 /* Style for individual grid items */
 .grid-item {
     padding: 20px;
     background-color: var(--secondary-color);;
-    border-radius: 8px;
+    border-radius: 4px;
     border: 1px solid var(--secondary-highlight);
 }
 
@@ -34,7 +34,7 @@
 }
 
 .map-wins-container, #queue, #team, table {
-    border-radius: 8px;
+    border-radius: 4px;
     background-color: rgba(42, 42, 42, 0.5);
 }
 
@@ -52,10 +52,11 @@
     background-color: rgba(255, 255, 255, 0.123);
     border: 1px solid var(--secondary-highlight);
     color: #ddd;
-    border-radius: 8px;
+    border-radius: 4px;
     padding: 8px 12px;
     margin-top: 12px;
     transition: background-color 0.3s, border 0.3s;
+    font-family: 'Comfortaa', cursive;
 }
 
 #player_search:hover {
@@ -82,6 +83,7 @@
     border-radius: 4px;
     color: #ddd;
     backdrop-filter: blur(10px);
+    font-family: 'Comfortaa', cursive;
 }
 
 .ui-menu-item {
@@ -145,6 +147,7 @@
     margin: 5px 0;
     font-size: 1em;
     cursor: pointer;
+    font-family: 'Comfortaa', cursive;
 }
 
 #queue:hover, #team:hover {
@@ -155,7 +158,7 @@
     background-color: rgba(36, 36, 36, 0.74);
     border: solid var(--secondary-highlight);
     border-width: 1px;
-    border-radius: 8px;
+    border-radius: 4px;
     color: #ddd;
     backdrop-filter: blur(10px);
 }
@@ -170,7 +173,7 @@ table {
     border-collapse: separate;
     border-spacing: 0px 2px;
     background-color: transparent;
-    border-radius: 8px; 
+    border-radius: 4px; 
     overflow: hidden;
 }
 
@@ -179,12 +182,12 @@ thead {
 }
 
 thead th:first-child {
-    border-top-left-radius: 8px; /* Top left corner of the table */
+    border-top-left-radius: 4px; /* Top left corner of the table */
     background-color: var(--secondary-highlight);
 }
 
 thead th:last-child {
-    border-top-right-radius: 8px; /* Top right corner of the table */
+    border-top-right-radius: 4px; /* Top right corner of the table */
     background-color: var(--secondary-highlight);
 }
 
@@ -194,11 +197,11 @@ thead th {
 }
 
 tbody tr:last-child td:first-child {
-    border-bottom-left-radius: 8px; /* Bottom left corner of the table */
+    border-bottom-left-radius: 4px; /* Bottom left corner of the table */
 }
 
 tbody tr:last-child td:last-child {
-    border-bottom-right-radius: 8px; /* Bottom right corner of the table */
+    border-bottom-right-radius: 4px; /* Bottom right corner of the table */
 }
 
 th, td {

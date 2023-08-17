@@ -1,4 +1,5 @@
 .table-container {
+    margin-top: 4px;
     padding: 0 5%;
     overflow-x: auto;
     flex-basis: 30%; /* Take up 30% of the horizontal space */
@@ -15,7 +16,7 @@ th, td {
 }
 
 th {
-    background-color: var(--secondary-highlight);
+    background-color: var(--secondary-color);
     color: white;
     font-weight: bold;
     position: sticky;
@@ -23,27 +24,38 @@ th {
     z-index: 10;
 }
 
-.table-container table td, .table-container table th {
+.table-container table td {
     background-color: rgba(255, 255, 255, 0.123); 
     padding: 10px;
 }
-
-.table-container table th:first-child,
+.table-container table th {
+    background-color: rgba(255, 255, 255, 0.123); 
+    padding: 10px;
+    border-style: solid;
+    border-color: var(--secondary-highlight);
+    border-width: 1px 0 1px 0;
+}
 .table-container table tr td:first-child {
-    border-radius: 8px 0px 0px 8px;
+    border-radius: 4px 0px 0px 4px;;
 }
-.table-container table th:first-child,
-.table-container table tr td:first-child:hover {
-    border-radius: 8px 0px 0px 8px;
-}
-.table-container table th:last-child,
+
 .table-container table tr td:last-child {
-    border-radius: 0px 8px 8px 0px;
+    border-radius: 0px 4px 4px 0px;
 }
-.table-container table th:last-child,
-.table-container table tr td:last-child:hover {
-    border-radius: 0px 8px 8px 0px;
+.table-container table th:first-child {
+    border-radius: 4px 0px 0px 4px;
+    border-style: solid;
+    border-color: var(--secondary-highlight);
+    border-width: 1px 0 1px 1px;
 }
+
+.table-container table th:last-child {
+    border-radius: 0px 4px 4px 0px;
+    border-style: solid;
+    border-color: var(--secondary-highlight);
+    border-width: 1px 1px 1px 0;
+}
+
 .table-container table tr {
     position: relative;
     z-index: 1; 
@@ -53,7 +65,7 @@ th {
     z-index: 1; 
 }
 .table-container table tr:hover{
-    background-color: rgb(53, 53, 53);
+    background-color: rgba(255, 255, 255, 0.103);
 }
 
 
@@ -70,7 +82,7 @@ table tr.selected:hover {
     margin-left: auto;
     margin-right: auto;
     border-color: var(--secondary-highlight);
-    border-radius: 8px;
+    border-radius: 4px;
     border-style: solid;
     border-width: 1px;
     margin-bottom: 16px;
@@ -85,22 +97,29 @@ table tr.selected:hover {
 }
 
 #player_search {
-    padding: 10px;
-    border: 0px solid #ccc;
-    background-color: rgba(255, 255, 255, 0.781);
-    color: #2b2b2b;
-    border-radius: 8px;
-    font-size: 16px;
-    width: 100%; 
-    margin-left: 25%;
+    width: 100%;
+    font-weight: bold;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: #ddd;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-left: 10%;
+    transition: background-color 0.3s, border 0.3s;
+    font-family: 'Comfortaa', cursive;
 }
 
-#player_search:focus, 
 #player_search:hover {
+    background-color: rgba(255, 255, 255, 0.101);
+}
+
+#player_search:focus {
+    background-color: var(--bg-color-focus);
     outline: none;
-    border-color: #aaa;
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
+}
+
+#player_search:focus:hover {
+    background-color: var(--bg-color-focus-hover);
 }
 
 table tr {
@@ -116,7 +135,7 @@ table tr {
     color: var(--secondary-color);
     text-decoration: none;
     border: none;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: 0.9em;
     transition: background-color 0.3s ease;
     background-color: var(--dark-blue);
@@ -133,53 +152,40 @@ table tr {
     color:#444444;
 }
 #copy-rebalanced-match {
-    padding: 10px 20px;
-    background-color: var(--dark-blue);
-    color: var(--text-color);
+    width: 50%;
     font-weight: bold;
-    border: none;
+    margin: 0 auto;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: #ddddddc4;
     border-radius: 8px;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease;
-    text-align: center;
-    display: inline-block;
-    margin-left: 25%;
-    margin-bottom: 2%;
-    margin-top: 2%;
-    max-width: 50%;
-    box-shadow: 0 0 5px #7760ad;
+    padding: 10px 12px;
+    transition: background-color 0.3s, border 0.3s;
+    font-family: 'Comfortaa', cursive;
 }
 #copy-rebalanced-match:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
-    color:#444444;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 #rebalance-teams {
-    padding: 10px 20px;
-    background-color: var(--dark-blue);
-    color: var(--text-color);
+    width: 50%;
     font-weight: bold;
-    border: none;
+    margin: 0 auto;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: #ddddddc4;
     border-radius: 8px;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease;
-    text-align: center;
-    display: inline-block;
-    margin-left: 25%;
-    margin-bottom: 2%;
-    margin-top: 2%;
-    max-width: 50%;
-    box-shadow: 0 0 5px #7760ad;
+    padding: 10px 12px;
+    transition: background-color 0.3s, border 0.3s;
+    margin-bottom: 32px;
+    font-family: 'Comfortaa', cursive;
 }
 
  
 #rebalance-teams:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
-    color:#444444;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 .table-container table th {
-    background-color: var(--secondary-highlight);
+    background-color: var(--secondary-color);
 }
 .main-wrapper {
     display: flex;
@@ -290,8 +296,7 @@ table tr {
 }
 
 .reset-team-btn:hover {
-    background-color: #4d855e;
-    box-shadow: 0 0 5px #aaa;
+    background-color: #ffffff8a;
 }
 
 .ranking-table td.move-cell {
@@ -316,15 +321,15 @@ table tr {
     box-shadow: 0 0 5px #aaa;
 }
 .ranking-table .move-button-left {
-    border-top-left-radius: 8px;
-    border-bottom-left-radius: 8px;
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
 .ranking-table .move-button-right {
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
 }
@@ -333,5 +338,5 @@ table tr {
     color: var(--text-color);
     font-weight: bold;
     background-color: #661b1b;
-    border-radius: 8px;
+    border-radius: 4px;
 }

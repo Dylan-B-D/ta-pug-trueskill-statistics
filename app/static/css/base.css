@@ -14,7 +14,7 @@
 
 /* Base Styles */
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Comfortaa', cursive;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -23,6 +23,7 @@ body {
 }
 
 header {
+    font-family: 'Comfortaa', cursive;
     display: flex;
     justify-content: flex-start;
     align-items: stretch; /* This makes the flex children stretch vertically */

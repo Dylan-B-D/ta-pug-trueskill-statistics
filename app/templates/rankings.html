@@ -4,38 +4,31 @@
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/rankings.css') }}">
 {% endblock %}
+
 {% block content %}
-<table class="controls-table">
-    <tr>
-        <td style="width: 20%;">
-            <form method="POST" class="date-picker-form">
-                <label for="start_date">From</label>
-                <input type="date" id="start_date" name="start_date" value="{{ start_date }}">
-                <label for="end_date">To</label>
-                <input type="date" id="end_date" name="end_date" value="{{ end_date }}">
-                <button id="reset_button">Reset</button>
-            </form>
-        </td>
-        <td style="width: 40%;">
-            <h2 class="header centered-text">Trueskill Rankings</h2>
-        </td>
-        <td style="width: 20%;">
-            <form method="POST" id="min-games-form">
-                <label for="min_games">Min games </label>
-                <input type="number" id="min_games" name="min_games" value="{{ min_games }}"
-                    placeholder="{{ min_games }}">
-            </form>
-        </td>
-        <td style="width: 20%;">
-            <form method="POST" class="date-picker-form">
+<form method="POST" class="controls-form">
+    <table class="controls-table">
+        <tr>
+            <td style="width: 33%;">
                 <select id="queue" name="queue">
                     <option value="NA" {% if queue=='NA' %}selected{% endif %}>NA</option>
                     <option value="EU" {% if queue=='EU' %}selected{% endif %}>EU</option>
+                    <option value="All" {% if queue=='All' %}selected{% endif %}>All</option>
                 </select>
-            </form>
-        </td>
-    </tr>
-</table>
+            </td>
+            <td style="width: 33%;">
+                <h2 class="header centered-text">Trueskill Rankings</h2>
+            </td>
+            <td style="width: 5%;">
+                <label for="min_games">Min Games </label>
+            </td>
+            <td style="width: 27%;">
+                <input type="number" id="min_games" name="min_games" value="{{ min_games }}" placeholder="{{ min_games }}">
+            </td>
+        </tr>
+    </table>
+</form>
+
 <div class="table-container">
     <div class="table-wrapper">
         <table>
@@ -59,5 +52,4 @@
     </div>
 </div>
 <script src="{{ url_for('static', filename='js/rankings.js') }}"></script>
-
 {% endblock %}

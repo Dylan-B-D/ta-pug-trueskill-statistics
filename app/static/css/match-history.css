@@ -2,14 +2,15 @@
 
 /* Match History Table Layout */
 .controls-table {
-    width: 90%;
+    width: 70%;
     margin-left: auto;
     margin-right: auto;
-    border: 2px;
-    border-radius: 0px 0px 50px 50px;
+    border-color: var(--secondary-highlight);
+    border-radius: 8px;
     border-style: solid;
-    border-width: 0px 2px 2px 2px;
+    border-width: 1px;
     margin-bottom: 16px;
+    margin-top: 16px;
     background-color: var(--secondary-color);
 }
 
@@ -24,13 +25,16 @@
     text-align: center;
     padding: 20px;
     margin: 0;
-    border-radius: 10px;
+    border-radius: 8px;
     color:#444444;
     box-shadow: 0 0 10px 5px #00000041;
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.6);
 }
 
 .table-container li {
-    margin-bottom: 4px;
+    margin-bottom: 1px;
     position: relative;
 }
 
@@ -116,6 +120,21 @@
 .date-time-container {
     margin-bottom: 12px;
 }
+#toggle-metrics-btn {
+    width: 100%;
+    font-weight: bold;
+    margin: 0 auto;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: #ddd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: background-color 0.3s, border 0.3s;
+}
+
+#toggle-metrics-btn:hover {
+    background-color: rgba(255, 255, 255, 0.101);
+}
 .table-container {
     display: flex;
     justify-content: center;
@@ -144,7 +163,7 @@ table tr td {
 /* Remove borders and spacing from the table */
 .table-container table {
     border-collapse: separate; 
-    border-spacing: 0 10px; /* 10px vertical spacing */
+    border-spacing: 0 6px; /* 10px vertical spacing */
 }
 
 /* Style for the rows */
@@ -158,60 +177,76 @@ table tr td {
     padding: 10px;
 }
 .table-container table th {
-    background-color: var(--secondary-highlight);
+    background-color: var(--secondary-color);
+    border-style: solid;
+    border-width: 1px 0 1px 0;
+    border-color: var(--secondary-highlight)
 }
 .table-container table th:first-child{
-    border-radius: 10px 0px 0px 10px;
+    border-radius: 8px 0px 0px 8px;
+    border-width: 1px 0 1px 1px;
 }
 .table-container table th:last-child {
-    border-radius: 0px 10px 10px 0px;
+    border-radius: 0px 8px 8px 0px;
+    border-width: 1px 1px 1px 0;
 }
 .table-container table tr td:first-child {
-    border-radius: 10px 0px 0px 10px;
+    border-radius: 8px 0px 0px 8px;
 }
 
 .table-container table tr td:last-child {
-    border-radius: 0px 10px 10px 0px;
+    border-radius: 0px 8px 8px 0px;
 }
 select {
-    width: 30%;
-    padding: 8px 24px;
-    border: none;
+    margin-left: 40%;
+    display: flex;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: var(--text-color);
+    padding: 8px 12px;
     border-radius: 8px;
-    color: #444444;
-    background-color: rgba(255, 255, 255, 0.85);
     font-size: 1em;
+    width: 25%; /* Reduced from 80% to 70% */
+    transition: background-color 0.3s, border 0.3s;
+    cursor: pointer;
 }
+
 select:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
+    background-color: rgba(56, 56, 56, 0.9); /* Similar to #queue:hover, #team:hover */
 }
+
 select:focus {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
+    background-color: rgba(36, 36, 36, 0.74); /* Similar to #queue:focus:hover, #team:focus:hover */
+    border: solid var(--secondary-highlight);
+    border-radius: 8px;
+    color: #ddd;
+    backdrop-filter: blur(10px);
+    border-width: 1px;
+    outline: none; /* Remove browser default focus styling */
 }
 #player_search {
-    padding: 10px;
-    border: 0px solid #ccc;
-    background-color: rgba(255, 255, 255, 0.781);
-    color: #2b2b2b;
+    width: 100%;
+    font-weight: bold;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: #ddd;
     border-radius: 8px;
-    font-size: 16px;
-    width: 40%; 
-    transition: border-color 0.3s, box-shadow 0.3s;
+    padding: 10px 12px;
+    margin-left: 10%;
+    transition: background-color 0.3s, border 0.3s;
+}
+
+#player_search:hover {
+    background-color: rgba(255, 255, 255, 0.101);
 }
 
 #player_search:focus {
+    background-color: var(--bg-color-focus);
     outline: none;
-    border-color: #aaa;
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
 }
-#player_search:hover {
-    outline: none;
-    border-color: #aaa;
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
+
+#player_search:focus:hover {
+    background-color: var(--bg-color-focus-hover);
 }
 .ui-autocomplete {
     max-height: 200px;
@@ -279,3 +314,52 @@ select:focus {
     scrollbar-width: thin; /* Makes the scrollbar thinner */
     scrollbar-color: var(--dark-blue) #e0e0e0; /* Colors for thumb and track */
 }
+.accuracy-container {
+    border: 1px solid var(--secondary-highlight);
+    margin-bottom: 20px;
+    border-radius: 5px;
+    background-color: var(--secondary-color);
+    width: 45%;
+    margin-left: auto;
+    margin-right: auto;
+    display: none;
+}
+
+.accuracy-container h2 {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.accuracy-container table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 1px;
+}
+
+.accuracy-container th, .accuracy-container td {
+    padding: 10px;
+    text-align: center;
+    background-color: #dddddd1a;;
+}
+/* Top-left corner for the first td of the first row in tbody */
+.accuracy-container tbody tr:first-of-type td:first-child {
+    border-top-left-radius: 5px;
+}
+
+/* Top-right corner for the last td of the first row in tbody */
+.accuracy-container tbody tr:first-of-type td:last-child {
+    border-top-right-radius: 5px;
+}
+
+/* Bottom-left corner for the first td of the last row in tbody */
+.accuracy-container tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 5px;
+}
+
+/* Bottom-right corner for the last td of the last row in tbody */
+.accuracy-container tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 5px;
+}
+
+
+

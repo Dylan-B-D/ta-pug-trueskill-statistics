@@ -14,7 +14,8 @@
         <td style="width: 40%;">
             <h2 class="header centered-text">Match History</h2>
         </td>
-        <td style="width: 10%;"></td>
+        <td style="width: 10%;">
+            <button id="toggle-metrics-btn">Show Accuracy</button></td>
         <td style="width: 20%;">
             <form method="POST" class="date-picker-form">
                 <select id="queue" name="queue" onchange="this.form.submit()">
@@ -26,6 +27,39 @@
         </td>
     </tr>
 </table>
+<div class="accuracy-container">
+    <h2>Accuracy Metrics ({{ queue }})</h2>
+    <table>
+        <tr>
+            <th>Criteria</th>
+            <th>All Games (Excluding Ties)</th>
+            <th>Last 90 Days or Last 10%</th>
+        </tr>
+        <tr>
+            <td>All Games</td>
+            <td>{{ "%.2f"|format(accuracy_data['all'][0]*100) }}% ({{ accuracy_data['all'][1] }}/{{ accuracy_data['all'][2] }})</td>
+            <td>{{ "%.2f"|format(accuracy_data['all_90'][0]*100) }}% ({{ accuracy_data['all_90'][1] }}/{{ accuracy_data['all_90'][2] }})</td>
+        </tr>
+        <tr>
+            <td>Above 55% Win Chance</td>
+            <td>{{ "%.2f"|format(accuracy_data['above_55'][0]*100) }}% ({{ accuracy_data['above_55'][1] }}/{{ accuracy_data['above_55'][2] }})</td>
+            <td>{{ "%.2f"|format(accuracy_data['above_55_90'][0]*100) }}% ({{ accuracy_data['above_55_90'][1] }}/{{ accuracy_data['above_55_90'][2] }})</td>
+        </tr>
+        <tr>
+            <td>Above 60% Win Chance</td>
+            <td>{{ "%.2f"|format(accuracy_data['above_60'][0]*100) }}% ({{ accuracy_data['above_60'][1] }}/{{ accuracy_data['above_60'][2] }})</td>
+            <td>{{ "%.2f"|format(accuracy_data['above_60_90'][0]*100) }}% ({{ accuracy_data['above_60_90'][1] }}/{{ accuracy_data['above_60_90'][2] }})</td>
+        </tr>
+        <tr>
+            <td>Above 65% Win Chance</td>
+            <td>{{ "%.2f"|format(accuracy_data['above_65'][0]*100) }}% ({{ accuracy_data['above_65'][1] }}/{{ accuracy_data['above_65'][2] }})</td>
+            <td>{{ "%.2f"|format(accuracy_data['above_65_90'][0]*100) }}% ({{ accuracy_data['above_65_90'][1] }}/{{ accuracy_data['above_65_90'][2] }})</td>
+        </tr>
+    </table>
+</div>
+
+
+
 <div class="table-container">
     <table>
         <tr>

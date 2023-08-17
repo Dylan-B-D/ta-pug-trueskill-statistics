@@ -25,7 +25,7 @@ strong {
     max-width: 800px;
     margin: 50px auto; /* vertical space and horizontal auto for centering */
     padding: 20px;
-    border: 2px solid var(--secondary-highlight);
+    border: 1px solid var(--secondary-highlight);
     border-radius: 10px;
     background-color: var(--secondary-color);
     box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);

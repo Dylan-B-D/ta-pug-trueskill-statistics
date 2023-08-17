@@ -25,53 +25,79 @@ body {
 header {
     display: flex;
     justify-content: flex-start;
-    align-items: center;
-    padding: 0px 32px;
+    align-items: stretch; /* This makes the flex children stretch vertically */
+    padding: 0; /* Resetting padding to 0 */
     position: sticky;
     top: 0;
     z-index: 1000;
-    border-radius: 10px 10px 10px 10px;
-    background: var(--gradient-bg);
-    text-shadow: var(--text-shadow-light);
+    border-style: solid;
+    border-width: 0 0 1px 0;
+    border-color: var(--secondary-highlight);
+    border-radius: 1px;
+    background-color: #1f2330;
+}
+
+header h1 {
+    margin: 0; 
+    padding-left: 20px;
+    padding-right: 2%;
+    display: flex;
+    border-style: solid;
+    border-width: 0 1px 0 0;
+    border-color: var(--secondary-highlight);
+    align-items: center; 
 }
 
 nav ul {
     list-style: none;
     display: flex;
     justify-content: center;
+    align-items: center; 
+    margin: 0;
+    padding: 0;
 }
-
 nav ul li {
-    margin-left: 2px;
+    margin-right: 1px;
 }
 
-/* Button Styles */
+nav ul li:last-child {
+    margin-right: 0;
+    border-style: solid;
+    border-width: 0 1px 0 0;
+    border-color: var(--secondary-highlight); 
+}
 nav ul li a {
-    padding: 10px 20px;
-    background-color: var(--secondary-highlight);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
     color: var(--text-color);
     text-decoration: none;
-    border: none;
-    box-shadow: var(--box-shadow);
+    border-style: none;
+    border-width:  0;
+    background-color: rgba(255, 255, 255, 0.1);
     font-weight: 600;
     font-size: 0.9em;
-    transition: background-color 0.3s ease;
     min-width: 150px;
-    text-align: center;
-    display: inline-block;
-    text-shadow: var(--text-shadow-dark);
+    min-height: 55px;
+    transition:background-color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+nav ul li a::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0%; /* Starting width */
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: width 0.3s; 
+    z-index: -1;
 }
 
-nav ul li:first-child a {
-    border-radius: 8px 0 0 8px;
-}
-
-nav ul li:last-child a {
-    border-radius: 0 8px 8px 0;
-}
-
-nav ul li a:hover {
-    filter: grayscale();
+nav ul li a:hover::before {
+    width: 100%;
 }
 
 @keyframes panBackground {

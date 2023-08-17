@@ -66,13 +66,15 @@ table tr.selected:hover {
 }
 
 .controls-table {
-    width: 90%;
-    margin: 0 auto;
-    border: 2px;
-    border-radius: 0px 0px 50px 50px;
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    border-color: var(--secondary-highlight);
+    border-radius: 8px;
     border-style: solid;
-    border-width: 0px 2px 2px 2px;
+    border-width: 1px;
     margin-bottom: 16px;
+    margin-top: 16px;
     background-color: var(--secondary-color);
 }
 

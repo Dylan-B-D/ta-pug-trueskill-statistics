@@ -6,4 +6,7 @@ $(document).ready(function(){
             window.location.href = "/match-history?player_search=" + ui.item.value;
         }
     });
+    $("#toggle-metrics-btn").click(function() {
+        $(".accuracy-container").toggle(); // This toggles the display of the accuracy-container
+    });
 });

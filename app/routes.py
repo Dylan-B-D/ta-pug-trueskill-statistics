@@ -1,5 +1,5 @@
 from flask import render_template, request, jsonify
-from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill, calculate_win_probability_for_match, player_win_rate_on_maps
+from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill, calculate_win_probability_for_match, player_win_rate_on_maps, calculate_accuracy
 from datetime import datetime
 from app import app
 from app.player_mappings import player_name_mapping
@@ -32,11 +32,11 @@ def rankings():
     game_data = fetch_data(start_date, end_date, queue)
     player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
 
-    min_games_str = request.form.get('min_games', '10')
+    min_games_str = request.form.get('min_games', '30')
     try:
         min_games = int(min_games_str)
     except ValueError:  # If the value cannot be converted to an integer
-        min_games = 10  # Default to 10
+        min_games = 30  # Default to 10
 
 
     # Sort players by trueskill rating
@@ -89,12 +89,14 @@ def match_history():
         match_data = [match for match in match_data if any(player['user']['name'] == player_name for team in match['teams'] for player in team)]
 
     match_data = augment_match_data_with_trueskill(match_data, player_ratings)
-
+    
+    accuracy_data = calculate_accuracy(match_data)
     # Set match index starting from the oldest
     for idx, match in enumerate(reversed(match_data), start=1):
         match['index'] = idx
 
-    return render_template('match-history.html', match_data=match_data, queue=queue, player_name=player_name)
+    return render_template('match-history.html', match_data=match_data, queue=queue, player_name=player_name, accuracy_data=accuracy_data)
+
 
 player_ratings_global = {}
 

@@ -17,7 +17,6 @@ th {
     background-color: var(--secondary-highlight);
     color: white;
     font-weight: bold;
-    position: sticky;
     top: 0px;
     z-index: 10;
 }
@@ -59,14 +58,15 @@ th {
     background-color: rgb(53, 53, 53);
 }
 .controls-table {
-    width: 90%;
+    width: 50%;
     margin-left: auto;
     margin-right: auto;
-    border: 2px;
-    border-radius: 0px 0px 50px 50px;
+    border-color: var(--secondary-highlight);
+    border-radius: 8px;
     border-style: solid;
-    border-width: 0px 2px 2px 2px;
+    border-width: 1px;
     margin-bottom: 16px;
+    margin-top: 16px;
     background-color: var(--secondary-color);
 }
 
@@ -76,89 +76,73 @@ th {
     vertical-align: middle;
 }
 
-.date-picker-form {
+.table-container {
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+/* Styling for the min_games input field */
+input#min_games {
     display: flex;
-    align-items: center;
-    margin-left: 64px;
-    gap: 12px;
-}
-
-#min_games {
-    margin-left: 12px;
+    background-color: rgba(42, 42, 42, 0.5); /* Similar to .map-wins-container */
+    border: 1px solid var(--secondary-highlight);
+    color: var(--text-color);
+    padding: 8px 12px;
+    margin-left: 7%;
     border-radius: 8px;
-    color: #444444;
-}
-
-#min_games:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
-}
-#min_games:focus {
-    outline: none;
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
-}
-input[type="date"], input[type="submit"], input[type="number"] {
-    border: none;
-    background-color: var(--text-color);
-    color: var(--bg-color);
-    padding: 8px 8px;
     font-size: 1em;
+    width: 25%; /* Adjust this to fit your layout */
+    transition: background-color 0.3s, border 0.3s;
+    outline: none; /* Remove browser default focus styling */
+}
+
+input#min_games:hover {
+    background-color: rgba(56, 56, 56, 0.9); /* Similar to #queue:hover, #team:hover */
+}
+
+input#min_games:focus {
+    background-color: rgba(36, 36, 36, 0.74); /* Similar to #queue:focus:hover, #team:focus:hover */
+    border: solid var(--secondary-highlight);
     border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    color: #ddd;
+    border-width: 1px;
+    backdrop-filter: blur(10px);
 }
-
-input[type="number"] {
-    width: 120px;
-    text-align: center;
-    -webkit-appearance: textfield; /* Removes spin buttons in Chrome and Safari */
-    -moz-appearance: textfield; /* Removes spin buttons in Firefox */
-}
-
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-#reset_button {
-    padding: 10px 20px;
-    background-color: var(--text-color);
-    color: #444444;
-    text-decoration: none;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9em;
-    transition: background-color 0.3s ease;
-    min-width: 150px;
-    text-align: center;
-    display: inline-block;
+
+input[type="number"] {
+    -moz-appearance: textfield;
 }
 
-#reset_button:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
-}
-
-select {
-    width: 40%;
-    padding: 8px 24px;
-    border: none;
+select#queue {
+    margin-left: 40%;
+    display: flex;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: var(--text-color);
+    padding: 8px 12px;
     border-radius: 8px;
-    color: #444444;
-    background-color: rgba(255, 255, 255, 0.85);
     font-size: 1em;
-}
-select:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
-}
-select:focus {
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 5px #aaa;
+    width: 25%; /* Reduced from 80% to 70% */
+    transition: background-color 0.3s, border 0.3s;
+    cursor: pointer;
 }
 
-.table-container {
-    padding-left: 10%;
-    padding-right: 10%;
+select#queue:hover {
+    background-color: rgba(56, 56, 56, 0.9); /* Similar to #queue:hover, #team:hover */
 }
+
+select#queue:focus {
+    background-color: rgba(36, 36, 36, 0.74); /* Similar to #queue:focus:hover, #team:focus:hover */
+    border: solid var(--secondary-highlight);
+    border-radius: 8px;
+    color: #ddd;
+    backdrop-filter: blur(10px);
+    border-width: 1px;
+    outline: none; /* Remove browser default focus styling */
+}
+

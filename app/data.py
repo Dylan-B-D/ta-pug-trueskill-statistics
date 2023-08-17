@@ -8,7 +8,6 @@ from app.map_name_mapping import map_name_mapping
 import math
 import time
 from math import erf, sqrt
-import numpy as np
 import matplotlib.pyplot as plt
 from scipy.special import logit
 import os

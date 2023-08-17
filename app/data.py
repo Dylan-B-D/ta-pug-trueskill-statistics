@@ -7,7 +7,6 @@ from app.player_mappings import player_name_mapping
 from app.map_name_mapping import map_name_mapping
 import time
 from math import erf, sqrt
-import matplotlib.pyplot as plt
 from scipy.special import logit
 import os
 
@@ -352,17 +351,17 @@ def plot_player_quality_over_time_with_moving_avg(game_data, player_ratings, win
     match_dates = [datetime.fromtimestamp(game['timestamp'] / 1000) for game in game_data]
     
     # Plot
-    plt.figure(figsize=(12, 6))
+    # plt.figure(figsize=(12, 6))
     # plt.plot(match_dates, quality_percentages, label='Match Quality Percentage', color='blue', alpha=0.5)
-    plt.plot(match_dates, moving_avg, label=f'Moving Average (Last {window_size} games)', color='green')
-    plt.axhline(y=0, color='black', linestyle='--', label='Overall Average Quality')  # red line for average
-    plt.xlabel('Date')
-    plt.ylabel('Quality Percentage (%)')
-    plt.title('Player Quality Over Time Compared to Overall Average')
-    plt.legend()
-    plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-    plt.tight_layout()
-    plt.show()
+    # plt.plot(match_dates, moving_avg, label=f'Moving Average (Last {window_size} games)', color='green')
+    # plt.axhline(y=0, color='black', linestyle='--', label='Overall Average Quality')  # red line for average
+    # plt.xlabel('Date')
+    # plt.ylabel('Quality Percentage (%)')
+    # plt.title('Player Quality Over Time Compared to Overall Average')
+    # plt.legend()
+    # plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+    # plt.tight_layout()
+    # plt.show()
 
 # game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'EU')
 # player_ratings, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), 'EU'), 'EU')

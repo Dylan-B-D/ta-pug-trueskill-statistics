@@ -157,4 +157,10 @@ select#queue:focus {
     border-width: 1px;
     outline: none; /* Remove browser default focus styling */
 }
+.table-container table tr {
+    transition: background-color 0.3s; /* add a fade-in and fade-out effect */
+}
 
+.table-container table tr.highlighted {
+    background-color: rgba(255, 255, 255, 0.185);
+}

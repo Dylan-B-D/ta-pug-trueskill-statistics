@@ -59,9 +59,8 @@ table tr td {
 }
 .win-prob-bar {
     width: 100%;
-    height: 12px;
-    border-radius: 4px;
-    background-color: #dd938c;
+    height: 6px;
+    background-color: #1f2330;
     position: relative;
     margin-left: 8px;
     margin-right: 8px;
@@ -69,14 +68,13 @@ table tr td {
 }
 .team1-prob {
     height: 100%;
-    border-radius: 4px 0px 0px 4px;
     background-color: #8de79c;
 }
 .win-prob-bar.team2-favored {
     background-color: #8de79c;
 }
 .win-prob-bar.team2-favored .team1-prob {
-    background-color: #dd938c;
+    background-color: #1f2330;
 }
 .win-prob-bar::after {
     content: "";
@@ -154,9 +152,8 @@ table tr td {
 }
 .rebalanced-win-prob-bar {
     width: 100%;
-    height: 12px;
-    border-radius: 4px;
-    background-color: #dd938c;
+    height: 6px;
+    background-color: #1f2330;
     position: relative;
     margin-left: 8px;
     margin-right: 8px;
@@ -164,14 +161,13 @@ table tr td {
 }
 .rebalanced-team1-prob {
     height: 100%;
-    border-radius: 4px 0px 0px 4px;
     background-color: #8de79c;
 }
 .rebalanced-win-prob-bar.team2-favored {
     background-color: #8de79c;
 }
 .rebalanced-win-prob-bar.team2-favored .team1-prob {
-    background-color: #dd938c;
+    background-color: #1f2330;
 }
 .rebalanced-win-prob-bar::after {
     content: "";
@@ -196,7 +192,7 @@ table tr td {
 /* Win Probability Bar styles when Team 1 is favored */
 .win-prob-bar.team1-favored,
 .rebalanced-win-prob-bar.team1-favored {
-    background-color: #dd938c;
+    background-color: #1f2330;;
 }
 
 .win-prob-bar.team1-favored .team1-prob,
@@ -212,5 +208,5 @@ table tr td {
 
 .win-prob-bar.team2-favored .team1-prob,
 .rebalanced-win-prob-bar.team2-favored .rebalanced-team1-prob {
-    background-color: #dd938c73;
+    background-color: #1f2330;;
 }

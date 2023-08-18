@@ -8,8 +8,9 @@
     <tr>
         <td style="width: 30%;">
             <form method="GET" action="{{ url_for('match_history') }}" class="player-search-form">
-                <input type="text" id="player_search" placeholder="{{ player_name or 'Search for player' }}" />
-            </form>
+                <input type="text" id="player_search" name="player_search" placeholder="{{ player_name or 'Search for player' }}" />
+                <input type="hidden" id="current_queue" name="queue" value="{{ queue }}" />
+            </form>            
         </td>
         <td style="width: 40%;">
             <h2 class="header centered-text">Match History</h2>
@@ -69,22 +70,48 @@
         </tr>
 
         {% for match in match_data %}
+        {% set background_url = map_url_mapping.get(match.maps[0], map_url_mapping['N/A']) if match.maps else map_url_mapping['N/A'] %}
+        {% set player_found_team1 = false %}
+        {% for player in match.teams[0] %}
+            {% if player['user']['name'] == player_name %}
+                {% set player_found_team1 = true %}
+            {% endif %}
+        {% endfor %}
+        {% set player_found_team2 = false %}
+        {% for player in match.teams[1] %}
+            {% if player['user']['name'] == player_name %}
+                {% set player_found_team2 = true %}
+            {% endif %}
+        {% endfor %}
         <tr>
             <td>
-                <ul
-                    class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }}">
+                <ul class="player-list {{ 'win' if match.winning_team == 1 else ('loss' if match.winning_team == 2 else 'tie') }} {{ 'emphasized-outcome' if player_found_team1 }}">
                     {% for player in match.teams[0] %}
-                    <li class="{% if player['captain'] == 1 %}captain{% endif %}">
+                    <li class="{% if player['captain'] == 1 %}captain{% endif %} {% if player['user']['name'] == player_name %}highlighted-player{% endif %}">
                         {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
                     </li>
                     {% endfor %}
                 </ul>
             </td>
-            <td class="match-info">
+            <td class="match-info" style="position: relative;">
+                <div style="
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-image: url('{{ background_url }}');
+                    background-repeat: no-repeat;
+                    background-size: cover;
+                    background-position: center center;
+                    z-index: -1;
+                    background-color: rgba(255, 255, 255, 0.123);
+                    -webkit-mask-image: -webkit-radial-gradient(center center, circle, rgba(0,0,0,1) 0%, transparent 70%);
+                "></div>
                 <div class="date-time-container centered-text">
                     <strong>Map(s):</strong> {{ ", ".join(match.maps) if match.maps else "N/A" }}
                 </div>                
-                
                 <span class="match-id">ID: {{ match.index }}</span>
                 <div class="date-time-container centered-text">
                     {{ match.date.split()[1] }}<br> <!-- This assumes the date format is "YYYY-MM-DD HH:MM:SS" -->
@@ -117,21 +144,20 @@
                 </div>
             </td>
             <td>
-                <ul
-                    class="player-list {{ 'loss' if match.winning_team == 1 else ('win' if match.winning_team == 2 else 'tie') }}">
+                <ul class="player-list {{ 'loss' if match.winning_team == 1 else ('win' if match.winning_team == 2 else 'tie') }} {{ 'emphasized-outcome' if player_found_team2 }}">
                     {% for player in match.teams[1] %}
-                    <li class="{% if player['captain'] == 1 %}captain{% endif %}">
+                    <li class="{% if player['captain'] == 1 %}captain{% endif %} {% if player['user']['name'] == player_name %}highlighted-player{% endif %}">
                         {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
                     </li>
                     {% endfor %}
                 </ul>
             </td>
-
         </tr>
         {% endfor %}
-
     </table>
 </div>
+
+
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">

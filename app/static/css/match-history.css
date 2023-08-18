@@ -27,11 +27,10 @@
     padding: 20px;
     margin: 0;
     border-radius: 4px;
-    color:#444444;
+    color:#e9e9e99d;
+    text-shadow: 2px 2px 8px black;
     box-shadow: 0 0 10px 5px #00000041;
-    border-style: solid;
-    border-width: 1px;
-    border-color: rgba(255, 255, 255, 0.4);
+
 }
 
 .table-container li {
@@ -40,15 +39,15 @@
 }
 
 .table-container ul.win {
-    background-color: #8de79cc4;  
+    background-color: #64ff7e5b;  
 }
 
 .table-container ul.loss {
-    background-color: #ffbbb3b9; 
+    background-color: #ff2f1841; 
 }
 
 .table-container ul.tie {
-    background-color: #adac65;  
+    background-color: #fffb0041;  
 }
 
 .table-container li.captain {
@@ -66,9 +65,8 @@
 
 .win-prob-bar {
     width: 100%;
-    height: 12px;
-    border-radius: 4px;
-    background-color: #dd938c; /* Color for Team 2 (default background) */
+    height: 6px;
+    background-color: #1f2330; /* Color for Team 2 (default background) */
     position: relative;
     margin-left: 8px;
     margin-right: 8px;
@@ -77,17 +75,16 @@
 
 .team1-prob {
     height: 100%;
-    border-radius: 4px 0px 0px 4px;
-    background-color: #8de79c; /* Color for Team 1 */
+    background-color: #a1ffb1c7; /* Color for Team 1 */
 }
 
 /* When Team 2 has a higher chance to win */
 .win-prob-bar.team2-favored {
-    background-color: #8de79c; /* Color for Team 1 */
+    background-color: #a1ffb1c7; /* Color for Team 1 */
 }
 
 .win-prob-bar.team2-favored .team1-prob {
-    background-color: #dd938c; /* Color for Team 2 */
+    background-color: #1f2330; /* Color for Team 2 */
 }
 
 /* Marker in the center of the progress bar */
@@ -106,12 +103,14 @@
 .stats-container.left {
     float: left;
     margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.801);
 }
 
 .stats-container.right {
     float: right;
     text-align: right;
     margin-bottom: 20px;
+    color: rgba(255, 255, 255, 0.801);
 }
 
 .date-time-container.centered-text {
@@ -175,9 +174,14 @@ table tr td {
 
 /* Style for the cells */
 .table-container table td, .table-container table th {
-    background-color: rgba(255, 255, 255, 0.123); 
+    position: relative;
+    background-color: rgba(255, 255, 255, 0.123);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
     padding: 10px;
 }
+
 .table-container table th {
     background-color: var(--secondary-color);
     border-style: solid;
@@ -199,6 +203,29 @@ table tr td {
 .table-container table tr td:last-child {
     border-radius: 0px 4px 4px 0px;
 }
+
+.highlighted-player {
+    background-color: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--secondary-highlight);
+    color: white;
+    padding: 4px 4px;
+    border-radius: 4px;
+}
+.table-container table tr.win td,
+.table-container table tr.win th {
+    background-color: rgba(144, 238, 144, 0.5); /* This is a light, slightly transparent green */
+}
+
+.table-container table tr.loss td,
+.table-container table tr.loss th {
+    background-color: rgba(255, 99, 71, 0.5); /* This is a light, slightly transparent red */
+}
+
+.table-container table tr.tie td,
+.table-container table tr.tie th {
+    background-color: rgba(255, 255, 85, 0.5); /* This is a light, slightly transparent yellow */
+}
+
 select {
     margin-left: 40%;
     display: flex;

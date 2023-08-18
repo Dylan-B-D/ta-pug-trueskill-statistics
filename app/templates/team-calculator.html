@@ -35,8 +35,8 @@
                 <th style="width: 15%;">Trueskill</th>
                 <th style="width: 15%;">μ</th>
                 <th style="width: 15%;">σ</th>
-                <th style="width: 10%;">T1</th>
-                <th style="width: 10%;">T2</th>
+                <th style="width: 10%;">Team 1</th>
+                <th style="width: 10%;">Team 2</th>
             </tr>
             {% for player in player_list %}
             <tr data-id="{{ player.id }}">
@@ -147,21 +147,18 @@
             </table>
         </div>
         <button id="copy-rebalanced-match">Copy Match To Clipboard</button>
-
-    </div>
-
-    <!-- Team 1 -->
-    <div class="team-container hidden" id="team1">
-        <h3>Team 1</h3>
-        <ul class="player-list" id="team1-list"></ul>
-    </div>
-
-    <!-- Team 2 -->
-    <div class="team-container hidden" id="team2">
-        <h3>Team 2</h3>
-        <ul class="player-list" id="team2-list"></ul>
-    </div>
+    </div> 
+</div>
+ <!-- Team 1 -->
+ <div class="team-container hidden" id="team1">
+    <h3>Team 1</h3>
+    <ul class="player-list" id="team1-list"></ul>
 </div>
 
+<!-- Team 2 -->
+<div class="team-container hidden" id="team2">
+    <h3>Team 2</h3>
+    <ul class="player-list" id="team2-list"></ul>
+</div>
 <script src="{{ url_for('static', filename='js/team-calculator.js') }}"></script>
 {% endblock %}

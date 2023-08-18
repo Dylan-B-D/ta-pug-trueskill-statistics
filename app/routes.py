@@ -3,6 +3,7 @@ from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_ma
 from datetime import datetime
 from app import app
 from app.player_mappings import player_name_mapping
+from app.map_url_mapping import map_url_mapping
 from flask import redirect
 
 @app.route('/')
@@ -95,7 +96,8 @@ def match_history():
     for idx, match in enumerate(reversed(match_data), start=1):
         match['index'] = idx
 
-    return render_template('match-history.html', match_data=match_data, queue=queue, player_name=player_name, accuracy_data=accuracy_data)
+    return render_template('match-history.html', match_data=match_data, queue=queue, player_name=player_name, accuracy_data=accuracy_data, map_url_mapping=map_url_mapping)
+
 
 
 player_ratings_global = {}

@@ -1,0 +1,6 @@
+run.bat
+__pycache__
+data_cache_2v2.json
+data_cache_All.json
+data_cache_EU.json
+data_cache_NA.json

@@ -3,7 +3,8 @@ $(document).ready(function(){
         source: "/autocomplete_player",
         minLength: 1,
         select: function(event, ui) {
-            window.location.href = "/match-history?player_search=" + ui.item.value;
+            $("#player_search").val(ui.item.value); // set the value of the search input
+            $(".player-search-form").submit();     // submit the form
         }
     });
     $("#toggle-metrics-btn").click(function() {

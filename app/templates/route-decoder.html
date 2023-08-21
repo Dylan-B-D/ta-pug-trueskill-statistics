@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Route Decoder</h2>
+
+<form action="{{ url_for('route_decoder') }}" method="post" enctype="multipart/form-data">
+    <label for="file">Upload Route File:</label>
+    <input type="file" name="file" id="file">
+    <br><br>
+    <input type="submit" value="Upload and Decode">
+</form>
+
+{% if data %}
+<div>
+    <h3>File Data: {{ filename }}</h3>
+    <p><strong>Route File Version:</strong> {{ data.routeFileVersion }}</p>
+    <p><strong>Map Name:</strong> {{ data.mapName }}</p>
+    <p><strong>Class Abbreviation:</strong> {{ data.classAbbr }}</p>
+    <p><strong>Player Name:</strong> {{ data.playerName }}</p>
+    <p><strong>Description:</strong> {{ data.description }}</p>
+    <p><strong>Team Number:</strong> {{ data.teamNum }}</p>
+    <p><strong>Class ID:</strong> {{ data.classID }}</p>
+    <p><strong>Class Health:</strong> {{ data.classHealth }}</p>
+    <p><strong>Flag Grab Time:</strong> {{ data.flagGrabTime }}</p>
+    <p><strong>Route Length:</strong> {{ data.routeLength }}</p>
+</div>
+{% endif %}
+
+{% if mirrored_file %}
+<br>
+<h3>Download Mirrored Route</h3>
+<a href="{{ url_for('download_file', filename=mirrored_file) }}">Download Mirrored Route</a>
+{% endif %}
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class=flashes>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+{% endblock %}

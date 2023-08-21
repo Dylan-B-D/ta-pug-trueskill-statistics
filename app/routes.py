@@ -5,6 +5,23 @@ from app import app
 from app.player_mappings import player_name_mapping
 from app.map_url_mapping import map_url_mapping
 from flask import redirect
+from flask import send_from_directory
+import os
+from werkzeug.utils import secure_filename
+from app.route_decoder import decode_route_file, mirror_route, reencrypt_route_file
+from flask import flash
+from werkzeug.utils import safe_join
+
+files_to_delete_after_request = set()
+
+UPLOAD_FOLDER = 'app/uploads'
+ALLOWED_EXTENSIONS = {'route'}
+
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def root():
@@ -173,3 +190,64 @@ def player_stats():
 
     # Use the current filters when redirecting
     return render_template('player_stats.html', player_stats=player_data, player_name=player_name)
+
+@app.route('/route-decoder', methods=['GET', 'POST'])
+def route_decoder():
+    mirrored_file = None
+    data = None  # This will hold the original data
+    print(f"App root: {app.root_path}")
+
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+
+            # Decode to get the original data
+            data, positions = decode_route_file(filepath)
+
+            # Mirror the original data
+            data_mirrored, positions_mirrored = mirror_route(data.copy(), positions.copy())  # Create a copy of the data and positions for mirroring
+
+            # Modify the filename based on the mirrored team
+            base_filename = filepath.rsplit('.', 1)[0]
+            if "_DS_" in base_filename:
+                base_filename = base_filename.replace("_DS_", "_BE_")
+            else:
+                base_filename = base_filename.replace("_BE_", "_DS_")
+            mirrored_filepath = base_filename + ".route"
+
+            output_file_reencrypted_mirrored = reencrypt_route_file(filepath, data_mirrored, positions_mirrored, mirrored_filepath)
+            mirrored_file = os.path.basename(output_file_reencrypted_mirrored)
+            os.remove(filepath)
+
+    return render_template('route-decoder.html', mirrored_file=mirrored_file, data=data)  # Send the original data to the template
+
+
+
+@app.route('/downloads/<filename>')
+def download_file(filename):
+    filepath = safe_join(app.config['UPLOAD_FOLDER'], filename)
+    if not os.path.exists(filepath):
+        return "File not found", 404
+    files_to_delete_after_request.add(filepath)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
+
+@app.after_request
+def cleanup_files_after_request(response):
+    global files_to_delete_after_request
+    for filepath in list(files_to_delete_after_request):  # Create a copy using list()
+        try:
+            os.remove(filepath)
+            files_to_delete_after_request.remove(filepath)  # Remove from the original set
+        except Exception as e:
+            app.logger.error(f"Error deleting file {filepath}: {e}")
+    return response

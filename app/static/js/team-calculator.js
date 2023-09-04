@@ -442,12 +442,10 @@ function updateMatchUI(teamId, playerName, playerId, trueskill, mu, sigma) {
     });
 }
 
-
-
-
-function sumTrueskill(team) {
-        return team.reduce((sum, player) => sum + player.trueskill, 0);
+function sumMu(team) {
+    return team.reduce((sum, player) => sum + player.mu, 0);
 }
+
 function generateCombinations(players, teamSize, startIndex = 0, currentTeam = []) {
     if (currentTeam.length === teamSize) {
         return [currentTeam];
@@ -461,6 +459,7 @@ function generateCombinations(players, teamSize, startIndex = 0, currentTeam = [
 
     return withCurrentPlayer.concat(withoutCurrentPlayer);
 }
+
 function gatherAllPlayersFromTeam(teamContainerId) {
     let teamPlayers = [];
     $(`#${teamContainerId} li`).each(function() {
@@ -504,7 +503,7 @@ function balanceTeamsOptimized(players) {
                 continue;
             }
 
-            const difference = Math.abs(sumTrueskill(fullTeam1) - sumTrueskill(team2));
+            const difference = Math.abs(sumMu(fullTeam1) - sumMu(team2));
 
             if (difference < bestDifference) {
                 bestDifference = difference;
@@ -519,7 +518,6 @@ function balanceTeamsOptimized(players) {
         team2: bestTeam2
     };
 }
-
 
 // Function to gather all players from both teams
 function gatherAllPlayers() {

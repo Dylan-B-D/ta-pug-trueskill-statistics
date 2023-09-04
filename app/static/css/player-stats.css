@@ -217,13 +217,50 @@ th {
 }
 
 tbody tr:hover {
-    background-color: rgba(184, 184, 184, 0.301);
+    filter: brightness(1.2);
 }
 
 .player-name-container{
     text-align: center;
     font-weight: bold;
 }
-tbody tr td:nth-child(1) {
+/* Chrome, Safari, Edge */
+.table-container::-webkit-scrollbar {
+    width: 16px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--secondary-color);
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--secondary-highlight);
+    border-radius: 8px;
+}
+
+/* Firefox */
+.table-container {
+    scrollbar-width: auto;
+    scrollbar-color: var(--secondary-highlight) var(--secondary-color);
+}
+.highlighted-player {
     font-weight: bold;
+    background-color: rgba(0, 0, 0, 0.425);
+    border-radius: 4px;
+}
+.player-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.win {
+    background-color: #2E8B57;
+}
+
+.loss {
+    background-color: #862626; /* Adjusted muted red */
+}
+
+.tie {
+    background-color: #b1aa47; /* Adjusted muted yellow */
 }

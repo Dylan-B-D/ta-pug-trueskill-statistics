@@ -213,17 +213,17 @@ table tr td {
 }
 .table-container table tr.win td,
 .table-container table tr.win th {
-    background-color: rgba(144, 238, 144, 0.5); /* This is a light, slightly transparent green */
+    background-color: rgba(144, 238, 144, 0.5); 
 }
 
 .table-container table tr.loss td,
 .table-container table tr.loss th {
-    background-color: rgba(255, 99, 71, 0.5); /* This is a light, slightly transparent red */
+    background-color: rgba(255, 99, 71, 0.5);
 }
 
 .table-container table tr.tie td,
 .table-container table tr.tie th {
-    background-color: rgba(255, 255, 85, 0.5); /* This is a light, slightly transparent yellow */
+    background-color: rgba(255, 255, 85, 0.5); 
 }
 
 select {
@@ -235,24 +235,24 @@ select {
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 1em;
-    width: 25%; /* Reduced from 80% to 70% */
+    width: 25%; 
     transition: background-color 0.3s, border 0.3s;
     cursor: pointer;
     font-family: 'Comfortaa', cursive;
 }
 
 select:hover {
-    background-color: rgba(56, 56, 56, 0.9); /* Similar to #queue:hover, #team:hover */
+    background-color: rgba(56, 56, 56, 0.9); 
 }
 
 select:focus {
-    background-color: rgba(36, 36, 36, 0.74); /* Similar to #queue:focus:hover, #team:focus:hover */
+    background-color: rgba(36, 36, 36, 0.74); 
     border: solid var(--secondary-highlight);
     border-radius: 4px;
     color: #ddd;
     backdrop-filter: blur(10px);
     border-width: 1px;
-    outline: none; /* Remove browser default focus styling */
+    outline: none; 
 }
 #player_search {
     width: 100%;
@@ -302,15 +302,15 @@ select:focus {
     background-color: var(--secondary-highlight);
 }
 
-/* Remove focus outline and border, and set text color */
+
 .ui-autocomplete .ui-menu-item-wrapper.ui-state-active {
     outline: none;
     border: none;
     background-color: var(--secondary-highlight); 
-    color: #000; /* Ensuring the text color remains black */
+    color: #000; 
 }
 
-/* Attempt to override potential jQuery UI default styles causing the artifact */
+
 .ui-state-focus, .ui-widget-content .ui-state-focus, .ui-widget-header .ui-state-focus {
     border: none;
     background: none;
@@ -328,24 +328,24 @@ select:focus {
 }
 /* For Webkit browsers like Chrome and Safari */
 .ui-autocomplete::-webkit-scrollbar {
-    width: 8px; /* Adjust width of the vertical scrollbar */
-    height: 8px; /* Adjust height of the horizontal scrollbar */
+    width: 8px; 
+    height: 8px; 
 }
 
 .ui-autocomplete::-webkit-scrollbar-thumb {
-    background-color: var(--dark-blue); /* Color of the scroll thumb */
-    border-radius: 4px; /* Roundness of the scroll thumb */
+    background-color: var(--dark-blue); 
+    border-radius: 4px; 
 }
 
 .ui-autocomplete::-webkit-scrollbar-track {
-    background-color: #e0e0e0; /* Color of the track */
-    border-radius: 4px; /* Roundness of the track */
+    background-color: #e0e0e0; 
+    border-radius: 4px; 
 }
 
 /* For Firefox */
 .ui-autocomplete {
-    scrollbar-width: thin; /* Makes the scrollbar thinner */
-    scrollbar-color: var(--dark-blue) #e0e0e0; /* Colors for thumb and track */
+    scrollbar-width: thin; 
+    scrollbar-color: var(--dark-blue) #e0e0e0; 
 }
 .accuracy-container {
     border: 1px solid var(--secondary-highlight);
@@ -393,6 +393,3 @@ select:focus {
 .accuracy-container tbody tr:last-child td:last-child {
     border-bottom-right-radius: 5px;
 }
-
-
-

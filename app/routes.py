@@ -176,20 +176,57 @@ def autocomplete_player():
     matching_players = [name for id, name in player_name_mapping.items() if term.lower() in name.lower()]
     return jsonify(matching_players)
 
+
 @app.route('/player_stats', methods=['GET', 'POST'])
 def player_stats():
     player_name = request.args.get('player_search') or request.form.get('player_search')
-    
+    queue = request.args.get('queue', 'NA') or request.form.get('queue', 'NA')
+
     if player_name:
-        queue = request.args.get('queue', 'NA') or request.form.get('queue', 'NA')
         team = request.args.get('team', '0') or request.form.get('team', '0')
         player_data = player_win_rate_on_maps(player_name, queue, team)
     else:
         player_data = None
         player_name = None  # Make sure to set player_name to None if not present
 
-    # Use the current filters when redirecting
-    return render_template('player_stats.html', player_stats=player_data, player_name=player_name)
+    # We get player ratings first since it's needed for both match_data and filtering
+    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), queue)
+    player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
+    
+    # Fetch match data directly
+    match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), queue, player_ratings)
+    
+    if player_name:
+        match_data_for_player = [match for match in match_data if any(player['user']['name'] == player_name for team in match['teams'] for player in team)]
+        
+        # Sort the matches by date, latest first (no need to reverse)
+        sorted_match_data_for_player = sorted(match_data_for_player, key=lambda x: x['date'], reverse=True)
+        
+        # Augment sorted matches with TrueSkill and other metrics
+        sorted_match_data_for_player = augment_match_data_with_trueskill(sorted_match_data_for_player, player_ratings)
+        
+        # Create lists of player names for each match
+        for match in sorted_match_data_for_player:
+            match['team1_names'] = [player['user']['name'] for player in match['teams'][0]]
+            match['team2_names'] = [player['user']['name'] for player in match['teams'][1]]
+
+        # Set match index starting from 1 for the oldest (so, reverse the sorted list for indexing)
+        for idx, match in enumerate(sorted_match_data_for_player[::-1], start=1):
+            match['index'] = idx
+
+        all_matches_for_player = sorted_match_data_for_player  # All matches, not just the last 5
+
+    else:
+        all_matches_for_player = []
+
+    match_class_color = {
+        'win': '0, 128, 0',  # Green
+        'loss': '255, 0, 0',  # Red
+        'tie': '255, 255, 0'  # Yellow
+    }
+        
+    return render_template('player_stats.html', match_class_color=match_class_color, all_matches_for_player=all_matches_for_player, player_stats=player_data, player_name=player_name, map_url_mapping=map_url_mapping)
+
 
 @app.route('/route-decoder', methods=['GET', 'POST'])
 def route_decoder():

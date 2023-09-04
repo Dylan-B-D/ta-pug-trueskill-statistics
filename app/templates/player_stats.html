@@ -16,7 +16,7 @@
         <div class="grid-item player-graphs-container"></div>
         <div class="grid-item player-name-container">
             {{ player_name }}
-        </div>        
+        </div>
         <div class="grid-item player-icon-container"></div>
 
         <!-- Second row containers -->
@@ -28,14 +28,12 @@
                     <option value="EU" {% if request.args.get('queue') == 'EU' %}selected{% endif %}>EU</option>
                     <option value="2v2" {% if request.args.get('queue') == '2v2' %}selected{% endif %}>2v2</option>
                 </select>
-                
                 <select name="team" id="team" onchange="submitWithFilters()">
                     <option value="0" {% if request.args.get('team', '0') == '0' %}selected{% endif %}>Any</option>
                     <option value="1" {% if request.args.get('team') == '1' %}selected{% endif %}>Diamond Sword</option>
                     <option value="2" {% if request.args.get('team') == '2' %}selected{% endif %}>Blood Eagle</option>
-                </select>            
+                </select>
             </form>
-            
             {% if player_stats and player_stats|length > 0 %}
                 <table>
                     <thead>
@@ -65,11 +63,76 @@
                 <p>No data available for the selected player and filters.</p>
             {% endif %}
         </div>
-        <div class="grid-item match-history-container"></div>
+        <div class="grid-item match-history-container">
+            <div class="table-container" style="overflow-y: scroll; max-height: 39rem;">  <!-- Scrollable Container -->
+                <table>
+                    <tr>
+                        <th>Team 1</th>
+                        <th>Match Info</th>
+                        <th>Team 2</th>
+                    </tr>
+                    {% set ns = namespace(is_player_in_team1=False, is_player_in_team2=False) %}
+                    {% for match in all_matches_for_player %}
+                        {% set ns.is_player_in_team1 = False %}
+                        {% set ns.is_player_in_team2 = False %}
+                        {% set match_class = '' %}
+                        
+                        {% for player in match.teams[0] %}
+                            {% if player['user']['name'] == player_name %}
+                                {% set ns.is_player_in_team1 = True %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% for player in match.teams[1] %}
+                            {% if player['user']['name'] == player_name %}
+                                {% set ns.is_player_in_team2 = True %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if (ns.is_player_in_team1 and match.winning_team == 1) or (ns.is_player_in_team2 and match.winning_team == 2) %}
+                            {% set match_class = 'win' %}
+                        {% elif (ns.is_player_in_team1 and match.winning_team == 2) or (ns.is_player_in_team2 and match.winning_team == 1) %}
+                            {% set match_class = 'loss' %}
+                        {% else %}
+                            {% set match_class = 'tie' %}
+                        {% endif %}
+                        
+                        <tr class="{{ match_class }}">
+                            <td>
+                                <ul class="player-list" style="list-style-type: none;">
+                                    {% for player in match.teams[0] %}
+                                        <li class="{% if player['captain'] == 1 %}captain{% endif %} {% if player['user']['name'] == player_name %}highlighted-player{% endif %}">
+                                            {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td class="match-info">
+
+                                <span class="match-id">ID: {{ match.index or 'N/A' }}</span>
+                                <div class="date-time-container centered-text">
+                                    
+                                    {{ match.date.split()[0] }}
+                                </div>
+                            </td>
+                            <td>
+                                <ul class="player-list" style="list-style-type: none;">
+                                    {% for player in match.teams[1] %}
+                                        <li class="{% if player['captain'] == 1 %}captain{% endif %} {% if player['user']['name'] == player_name %}highlighted-player{% endif %}">
+                                            {{ player['user']['name'] }} {% if player['captain'] == 1 %}(c){% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        
         <div class="grid-item general-stats-container"></div>
     </div>
 
-    
     <script>
         $(document).ready(function() {
             $("#player_search").autocomplete({

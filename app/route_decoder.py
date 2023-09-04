@@ -153,4 +153,3 @@ def reencrypt_route_file(filename, data, positions, output_filename=None):
             file.write(pos_data)
     
     return output_filename
-

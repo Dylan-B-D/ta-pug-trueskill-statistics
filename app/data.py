@@ -9,6 +9,8 @@ import time
 from math import erf, sqrt
 from scipy.special import logit
 import os
+import itertools
+import math
 
 
 CACHE_FILE = "app/data/data_cache.json"
@@ -39,30 +41,26 @@ def load_from_cache(queue):
     return None
 
 
-def calculate_win_probability(rating1, rating2):
-    delta_mu = rating1.mu - rating2.mu
-    sum_sigma = rating1.sigma ** 2 + rating2.sigma ** 2
-    x = delta_mu / sqrt(2 * (trueskill.BETA * trueskill.BETA) + sum_sigma)
-    return 0.5 * (1 + erf(x / sqrt(2)))
-    # return stats.norm.cdf(delta_mu / math.sqrt(2 * sum_sigma))
+def win_probability(team1, team2):
+    delta_mu = sum(r.mu for r in team1) - sum(r.mu for r in team2)
+    sum_sigma = sum(r.sigma ** 2 for r in itertools.chain(team1, team2))
+    size = len(team1) + len(team2)
+    denom = math.sqrt(size * (trueskill.BETA * trueskill.BETA) + sum_sigma)
+    ts = trueskill.global_env()
+    return ts.cdf(delta_mu / denom)
 
 def calculate_win_probability_for_match(match, player_ratings):
     ts = trueskill.TrueSkill()
-    # Calculate win probability of team
+    
+    # Retrieve ratings for each player in the teams
     team1_ratings = [player_ratings.get(player['user']['id'], ts.create_rating()) for player in match['players'] if player['team'] == 1]
     team2_ratings = [player_ratings.get(player['user']['id'], ts.create_rating()) for player in match['players'] if player['team'] == 2]
 
-
-    # Calculate average rating using μ - 2σ
-    team1_avg_rating = trueskill.Rating(
-        mu=sum((rating.mu - 2*rating.sigma) for rating in team1_ratings),
-        sigma=sum((rating.sigma**2) for rating in team1_ratings))
-    team2_avg_rating = trueskill.Rating(
-        mu=sum((rating.mu - 2*rating.sigma) for rating in team2_ratings),
-        sigma=sum((rating.sigma**2) for rating in team2_ratings))
-
-    win_prob_team1 = calculate_win_probability(team1_avg_rating, team2_avg_rating)
+    # Calculate win probability using the win_probability function
+    win_prob_team1 = win_probability(team1_ratings, team2_ratings)
+    
     return win_prob_team1
+
 
 def apply_mappings(combined_data):
     mapping_applied_count = 0
@@ -175,12 +173,22 @@ def compute_logit_bonus(pick_order, total_picks=12, delta=0.015):
     
     return bonus
 
+def calculate_draw_rate(queue):
+    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), queue)
+    total_matches = len(game_data)
+    draw_matches = sum(1 for game in game_data if game['winningTeam'] == 0)  # Assuming a winning team of 0 means a draw
+    return draw_matches / total_matches if total_matches > 0 else 0
+
 
 def calculate_ratings(game_data, queue='NA'):
     global player_names, player_picks 
 
     # Initialize TrueSkill
-    ts = trueskill.TrueSkill()
+    draw_rate = calculate_draw_rate(queue)
+    if queue == 'NA':
+        ts = trueskill.TrueSkill()
+    else:
+        ts = trueskill.TrueSkill(draw_probability=draw_rate)
 
     # Collect all player ids, their pick orders, and their wins
     all_player_ids = set(player['user']['id'] for match in game_data for player in match['players'])
@@ -520,6 +528,16 @@ def augment_match_data_with_trueskill(match_data, player_ratings):
         # Calculate average TrueSkill (mu - 2*sigma) for each team
         match['team1_avg_trueskill'] = sum((rating.mu - 2*rating.sigma) for rating in team1_ratings) / len(team1_ratings)
         match['team2_avg_trueskill'] = sum((rating.mu - 2*rating.sigma) for rating in team2_ratings) / len(team2_ratings)
+
+        # Calculate extended skill range for each team (min(mu - 2*sigma), max(mu + 2*sigma))
+        match['team1_skill_range'] = (
+            min(rating.mu - 2 * rating.sigma for rating in team1_ratings),
+            max(rating.mu + 2 * rating.sigma for rating in team1_ratings),
+        )
+        match['team2_skill_range'] = (
+            min(rating.mu - 2 * rating.sigma for rating in team2_ratings),
+            max(rating.mu + 2 * rating.sigma for rating in team2_ratings),
+        )
     
     return match_data
 

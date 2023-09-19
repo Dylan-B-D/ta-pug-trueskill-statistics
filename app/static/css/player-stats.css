@@ -5,7 +5,7 @@
     gap: 20px; /* Gap between columns and rows */
     max-width: 80%; /* Width of the grid container */
     margin: 50px auto;
-    padding: 20px;
+    padding: 0 20px 20px 20px;
     border-radius: 4px;
 }
 
@@ -23,7 +23,7 @@
 
 .player-search-form {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 10px;
     width: 100%;
 }
 
@@ -214,6 +214,7 @@ th, td {
 th {
     font-weight: bold;
     color: var(--text-color);
+    background-color: var(--secondary-highlight);
 }
 
 tbody tr:hover {
@@ -223,6 +224,7 @@ tbody tr:hover {
 .player-name-container{
     text-align: center;
     font-weight: bold;
+    font-size: 2rem;
 }
 /* Chrome, Safari, Edge */
 .table-container::-webkit-scrollbar {
@@ -263,4 +265,39 @@ tbody tr:hover {
 
 .tie {
     background-color: #b1aa47; /* Adjusted muted yellow */
+}
+.general-stats-header {
+    font-weight: bold;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.general-stats-list {
+    list-style-type: none; 
+    padding-left: 0;
+    margin-top: 20px;
+}
+
+.general-stats-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #e5e5e53a; 
+}
+
+.general-stats-list li:last-child {
+    border-bottom: none; 
+}
+.flex-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.left-item, .right-item {
+    margin: 0 10px; 
+}
+.percentile-header {
+    text-align: right;
+    margin: 0 10px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.425);
 }

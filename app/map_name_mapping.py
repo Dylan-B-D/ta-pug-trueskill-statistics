@@ -21,6 +21,7 @@ map_name_mapping = {
     "ss": "Sunstar",
     "sunstar": "Sunstar",
     "styx": "Styx",
+    "blues": "Blues",
     "tartar": "Tartarus",
     "tartarus": "Tartarus",
     "walledin": "Walled In",

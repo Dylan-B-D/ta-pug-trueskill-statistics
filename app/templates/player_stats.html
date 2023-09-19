@@ -2,6 +2,7 @@
 
 {% block head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/player-stats.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -12,8 +13,9 @@
     </div>
 
     <div class="grid-container {% if not request.args.get('player_search') %}initially-hidden{% endif %}">
-        <!-- First row containers -->
-        <div class="grid-item player-graphs-container"></div>
+        <div class="grid-item player-rank-container">
+            
+        </div>
         <div class="grid-item player-name-container">
             {{ player_name }}
         </div>
@@ -129,8 +131,138 @@
                 </table>
             </div>
         </div>
+        {% if player_name %}
+        <div class="grid-item general-stats-container" style="position: relative;">
+            <div class="general-stats-header">
+                General Stats
+            </div>
         
-        <div class="grid-item general-stats-container"></div>
+            <div style="position: relative; width: 400px; height: 200px;">
+                <canvas id="ratingHistoryChart" width="400" height="200"></canvas>
+                <div id="noDataMessage" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
+                    Not enough data (30 games required)
+                </div>
+            </div>
+            <table class="general-stats-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Stat</th>
+                        <th style="width: 30%;">Value</th>
+                        <th style="width: 30%;">Percentile</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Matches Played</td>
+                        <td>{{ total_games or 'N/A' }}</td>
+                        <td style="color: rgb({{ compute_rgb(total_games_percentile)[0] }}, {{ compute_rgb(total_games_percentile)[1] }}, 0)">{{ "{:.1f}".format(total_games_percentile) + "%" if total_games_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Winrate</td>
+                        <td>{{ "{:.2f}".format(win_rate) + "%" if win_rate is not none else 'N/A' }}</td>
+                        <td style="color: rgb({{ compute_rgb(win_rate_percentile)[0] }}, {{ compute_rgb(win_rate_percentile)[1] }}, 0)">{{ "{:.1f}".format(win_rate_percentile) + "%" if win_rate_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Win / Loss / Tie</td>
+                        <td>{{ wins }} / {{ losses }} / {{ ties }}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Avg Pick</td>
+                        <td>{{ "{:.2f}".format(average_pick) or 'N/A' }}</td>
+                        <td style="color: rgb({{ compute_rgb(avg_pick_percentile)[0] }}, {{ compute_rgb(avg_pick_percentile)[1] }}, 0)">{{ "{:.1f}".format(avg_pick_percentile) + "%" if avg_pick_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Last Played</td>
+                        <td>{{ last_played if last_played else 'N/A' }}</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Peak Rating</td>
+                        <td>{{ "{:.2f}μ".format(peak) if peak != 'N/A' else 'N/A' }}</td>
+                        <td style="color: rgb({{ compute_rgb(max_rating_percentile)[0] }}, {{ compute_rgb(max_rating_percentile)[1] }}, 0)">{{ "{:.1f}".format(max_rating_percentile) + "%" if max_rating_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>% of Matches Within 5% of Peak</td>
+                        <td>{{ time_within_peak }}</td>
+                        <td style="color: rgb({{ compute_rgb(five_from_peak_percentile)[0] }}, {{ compute_rgb(five_from_peak_percentile)[1] }}, 0)">{{ "{:.1f}".format(five_from_peak_percentile) + "%" if five_from_peak_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Rank at peak</td>
+                        <td>{{ rank_peak }}</td>
+                        <td style="color: rgb({{ compute_rgb(rank_at_peak_percentile)[0] }}, {{ compute_rgb(rank_at_peak_percentile)[1] }}, 0)">{{ "{:.1f}".format(rank_at_peak_percentile) + "%" if rank_at_peak_percentile else 'N/A' }}</td>
+                    </tr>
+                    <!-- For stats without a percentile value, the format is similar to the rows above but with 'N/A' for both value and percentile columns -->
+                    <tr>
+                        <td>Times Captained</td>
+                        <td>{{ total_captained }}</td>
+                        <td style="color: rgb({{ compute_rgb(total_captained_percentile)[0] }}, {{ compute_rgb(total_captained_percentile)[1] }}, 0)">{{ "{:.1f}".format(total_captained_percentile) + "%" if total_captained_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Captain Winrate</td>
+                        <td>{{ "{:.2f}%".format(captain_winrate)  }}</td>
+                        <td style="color: rgb({{ compute_rgb(captain_winrate_percentile)[0] }}, {{ compute_rgb(captain_winrate_percentile)[1] }}, 0)">{{ "{:.1f}".format(captain_winrate_percentile) + "%" if captain_winrate_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Captain per Match %</td>
+                        <td>{{ "{:.2f}%".format(captain_per_match_percentage)  }}</td>
+                        <td style="color: rgb({{ compute_rgb(captain_per_match_percentile)[0] }}, {{ compute_rgb(captain_per_match_percentile)[1] }}, 0)">{{ "{:.1f}".format(captain_per_match_percentile) + "%" if captain_per_match_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Captain Pick Accuracy</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Time to Captain</td>
+                        <td>{{ average_captain_time }}</td>
+                        <td style="color: rgb({{ compute_rgb(captain_time_percentile)[0] }}, {{ compute_rgb(captain_time_percentile)[1] }}, 0)">{{ "{:.1f}".format(captain_time_percentile) + "%" if captain_time_percentile else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Best Teammate</td>
+                        <td>N/A</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Longest Win Streak</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Longest Loss Streak</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Highest Winrate over 30 Games</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Consistency</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>% of unexpected wins</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>% of unexpected losses</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Top Maps Picked as Captain</td>
+                        <td>{{ top_3_maps_picked_as_captain }}</td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        {% endif %}
     </div>
 
     <script>
@@ -175,5 +307,82 @@
             // Submit the form
             document.getElementById('filtersForm').submit();
         }
-    </script>
+        let playerRatingHistory = {{ player_rating_history | tojson | safe }};
+        // Extract the player's rating history for whom you want to display the graph
+        let playerId = "{{ player_id }}";
+        let ratings = playerRatingHistory[playerId];
+
+        if (!ratings || ratings.length < 30) {
+            // Player has less than 30 games
+            document.getElementById('noDataMessage').style.display = 'block';
+        } else {
+            document.getElementById('noDataMessage').style.display = 'none';
+            // Remove the first 30 ratings
+            ratings = ratings.slice(30);
+
+            // Extract the mu and sigma values from the ratings
+            let mu_values = ratings.map(rating => rating.mu);
+            let sigma_values = ratings.map(rating => rating.sigma);
+            
+            // Calculate the upper and lower bounds for the confidence region
+            let upper_bound = mu_values.map((mu, index) => mu + 2 * sigma_values[index]);
+            let lower_bound = mu_values.map((mu, index) => mu - 2 * sigma_values[index]);
+
+            // Generate x-axis labels (match numbers) starting from 31 as we've excluded the first 30 matches
+            let matches = Array.from({ length: mu_values.length }, (_, i) => i + 31);
+
+            let ctx = document.getElementById('ratingHistoryChart').getContext('2d');
+            let myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: matches,
+                datasets: [
+                    {
+                        label: 'Lower Bound',
+                        data: lower_bound,
+                        borderColor: 'rgba(200, 200, 200, 0)',  
+                        borderWidth: 0,
+                        fill: false,  
+                        pointRadius: 0  
+                    },
+                    {
+                        label: 'Upper Bound',
+                        data: upper_bound,
+                        borderColor: 'rgba(200, 200, 200, 0)',  
+                        backgroundColor: 'rgba(200, 200, 200, 0.3)',  
+                        borderWidth: 0,
+                        fill: '-1', 
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'Mu',
+                        data: mu_values,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: false,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Match Number'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Rating'
+                        }
+                    }
+                }
+            }
+        });
+        }
+
+
+        </script>
 {% endblock %}

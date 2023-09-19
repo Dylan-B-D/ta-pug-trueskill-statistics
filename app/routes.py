@@ -1,16 +1,50 @@
-from flask import render_template, request, jsonify
-from app.data import fetch_data, calculate_ratings, fetch_match_data, augment_match_data_with_trueskill, calculate_win_probability_for_match, player_win_rate_on_maps, calculate_accuracy
-from datetime import datetime
+from flask import (render_template, request, jsonify, redirect, 
+                   send_from_directory, flash)
+from werkzeug.utils import secure_filename, safe_join
 from app import app
 from app.player_mappings import player_name_mapping
 from app.map_url_mapping import map_url_mapping
-from flask import redirect
-from flask import send_from_directory
+from app.route_decoder import (decode_route_file, mirror_route, 
+                               reencrypt_route_file)
+from app.data import (
+    fetch_data, 
+    load_map_data,
+    calculate_ratings, 
+    fetch_match_data, 
+    augment_match_data_with_trueskill, 
+    calculate_win_probability_for_match, 
+    player_win_rate_on_maps, 
+    calculate_accuracy,
+    calculate_win_rate,
+    calculate_average_pick,
+    calculate_total_games,
+    calculate_last_played,
+    player_average_pick_percentile,
+    compute_rgb,
+    player_win_rate_percentile,
+    player_total_games_percentile,
+    calculate_win_loss_tie,
+    calculate_peak_rating,
+    calculate_percentage_within_five_percent_of_peak,
+    calculate_rank_at_peak,
+    player_peak_rating_percentile,
+    player_percentage_within_five_percent_of_peak_percentile,
+    player_rank_at_peak_percentile,
+    calculate_times_captained,
+    player_times_captained_percentile,
+    calculate_captain_winrate,
+    player_captain_winrate_percentile,
+    calculate_captain_per_match_percentage,
+    player_captain_per_match_percentile,
+    calculate_average_captain_time,
+    player_captain_time_percentile,
+    format_captain_time,
+    calculate_top_maps_picked_as_captain,
+    calculate_best_teammate,
+)
 import os
-from werkzeug.utils import secure_filename
-from app.route_decoder import decode_route_file, mirror_route, reencrypt_route_file
-from flask import flash
-from werkzeug.utils import safe_join
+from datetime import datetime
+
 
 files_to_delete_after_request = set()
 
@@ -48,7 +82,7 @@ def rankings():
 
     queue = request.form.get('queue', 'NA')
     game_data = fetch_data(start_date, end_date, queue)
-    player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
+    player_ratings, player_names, player_games, _ = calculate_ratings(game_data, queue)
 
     min_games_str = request.form.get('min_games', '30')
     try:
@@ -95,7 +129,7 @@ def match_history():
     
     # We get player ratings first since it's needed for both match_data and filtering
     game_data = fetch_data(start_date, end_date, queue)
-    player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
+    player_ratings, player_names, player_games, _ = calculate_ratings(game_data, queue)
     
     # Fetch match data directly
     match_data = fetch_match_data(start_date, end_date, queue, player_ratings)
@@ -123,7 +157,7 @@ player_ratings_global = {}
 def team_calculator():
     global player_ratings_global
     game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')
-    player_ratings, player_names, _ = calculate_ratings(game_data, 'NA')
+    player_ratings, player_names, _ , _= calculate_ratings(game_data, 'NA')
     sorted_player_ids = sorted(player_ratings, key=lambda x: player_ratings[x].mu - 2*player_ratings[x].sigma, reverse=True)
     player_ratings_global = player_ratings
     query = request.form.get('search_query', '').lower()
@@ -181,36 +215,63 @@ def autocomplete_player():
 def player_stats():
     player_name = request.args.get('player_search') or request.form.get('player_search')
     queue = request.args.get('queue', 'NA') or request.form.get('queue', 'NA')
+    map_data = load_map_data(queue)
+    player_id = None  # Initialize player_id to None
 
+    # Map player_name to player_id if possible
+    if player_name:
+        player_id = [k for k, v in player_name_mapping.items() if v == player_name]
+        player_id = player_id[0] if player_id else None  # Take the first match if exists
+    
     if player_name:
         team = request.args.get('team', '0') or request.form.get('team', '0')
         player_data = player_win_rate_on_maps(player_name, queue, team)
     else:
         player_data = None
-        player_name = None  # Make sure to set player_name to None if not present
+        player_name = None
 
-    # We get player ratings first since it's needed for both match_data and filtering
     game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), queue)
-    player_ratings, player_names, player_games = calculate_ratings(game_data, queue)
-    
-    # Fetch match data directly
+    player_ratings, player_names, player_games, player_rating_history = calculate_ratings(game_data, queue)
     match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), queue, player_ratings)
     
     if player_name:
         match_data_for_player = [match for match in match_data if any(player['user']['name'] == player_name for team in match['teams'] for player in team)]
-        
-        # Sort the matches by date, latest first (no need to reverse)
         sorted_match_data_for_player = sorted(match_data_for_player, key=lambda x: x['date'], reverse=True)
-        
-        # Augment sorted matches with TrueSkill and other metrics
         sorted_match_data_for_player = augment_match_data_with_trueskill(sorted_match_data_for_player, player_ratings)
         
-        # Create lists of player names for each match
+        win_rate = calculate_win_rate(player_name, game_data)
+        average_pick = calculate_average_pick(player_name, game_data)
+        total_games = calculate_total_games(player_name, game_data)
+        last_played = calculate_last_played(player_name, game_data)
+        wins, losses, ties = calculate_win_loss_tie(player_name, game_data)
+        avg_pick_percentile = player_average_pick_percentile(player_name, game_data)
+        win_rate_percentile = player_win_rate_percentile(player_name, game_data)
+        total_games_percentile = player_total_games_percentile(player_name, game_data)
+        time_within_peak = calculate_percentage_within_five_percent_of_peak(player_id, player_rating_history)
+        rank_at_peak = calculate_rank_at_peak(player_id, player_rating_history)
+        max_rating_percentile = player_peak_rating_percentile(player_id, player_rating_history)
+        five_from_peak_percentile = player_percentage_within_five_percent_of_peak_percentile(player_id, player_rating_history)
+        rank_at_peak_percentile = player_rank_at_peak_percentile(player_id, player_rating_history)
+        times_captained = calculate_times_captained(player_name, game_data)
+        peak_rating = calculate_peak_rating(player_id, player_rating_history)
+        times_captained_percentile = player_times_captained_percentile(player_name, game_data)
+        captain_winrate = calculate_captain_winrate(player_name, game_data)
+        captain_winrate_percentile = player_captain_winrate_percentile(player_name, game_data)
+        captain_per_match_percentage = calculate_captain_per_match_percentage(player_name, game_data)
+        captain_per_match_percentile = player_captain_per_match_percentile(player_name, game_data)
+        avg_time = calculate_average_captain_time(player_name, game_data, map_data)
+        average_captain_time = format_captain_time(avg_time)
+        captain_time_percentile = player_captain_time_percentile(player_name, game_data, map_data)
+        top_maps_picked_as_captain = calculate_top_maps_picked_as_captain(player_name, game_data, map_data)
+        # best_teammate = calculate_best_teammate(player_name, game_data, player_ratings)
+
+        if peak_rating is None:
+            peak_rating = 'N/A'
+
         for match in sorted_match_data_for_player:
             match['team1_names'] = [player['user']['name'] for player in match['teams'][0]]
             match['team2_names'] = [player['user']['name'] for player in match['teams'][1]]
 
-        # Set match index starting from 1 for the oldest (so, reverse the sorted list for indexing)
         for idx, match in enumerate(sorted_match_data_for_player[::-1], start=1):
             match['index'] = idx
 
@@ -218,14 +279,72 @@ def player_stats():
 
     else:
         all_matches_for_player = []
+        win_rate = None
+        average_pick = None
+        total_games = None
+        last_played = None
+        avg_pick_percentile = None
+        win_rate_percentile = None
+        total_games_percentile = None
+        wins = None
+        losses = None
+        ties = None
+        peak_rating = None
+        time_within_peak = None
+        rank_at_peak = None
+        max_rating_percentile = None
+        five_from_peak_percentile = None
+        rank_at_peak_percentile = None
+        times_captained = None
+        times_captained_percentile = None
+        captain_winrate = None
+        captain_winrate_percentile = None
+        captain_per_match_percentage = None
+        captain_per_match_percentile = None
+        average_captain_time = None
+        captain_time_percentile = None
+        top_maps_picked_as_captain = None
+        # best_teammate = None
+    
 
-    match_class_color = {
-        'win': '0, 128, 0',  # Green
-        'loss': '255, 0, 0',  # Red
-        'tie': '255, 255, 0'  # Yellow
-    }
-        
-    return render_template('player_stats.html', match_class_color=match_class_color, all_matches_for_player=all_matches_for_player, player_stats=player_data, player_name=player_name, map_url_mapping=map_url_mapping)
+    return render_template(
+        'player_stats.html', 
+        player_rating_history=player_rating_history, 
+        all_matches_for_player=all_matches_for_player, 
+        player_stats=player_data, 
+        player_name=player_name,
+        player_id=player_id,
+        win_rate=win_rate,
+        average_pick=average_pick,
+        avg_pick_percentile=avg_pick_percentile,
+        win_rate_percentile=win_rate_percentile,
+        total_games_percentile=total_games_percentile,
+        total_games=total_games,
+        last_played=last_played,
+        wins=wins,
+        losses=losses,
+        ties=ties,
+        peak=peak_rating,
+        time_within_peak=time_within_peak,
+        rank_peak=rank_at_peak,
+        max_rating_percentile=max_rating_percentile,
+        five_from_peak_percentile=five_from_peak_percentile,
+        rank_at_peak_percentile=rank_at_peak_percentile,
+        total_captained = times_captained,
+        total_captained_percentile=times_captained_percentile,
+        captain_winrate=captain_winrate,
+        captain_winrate_percentile=captain_winrate_percentile,
+        captain_per_match_percentage=captain_per_match_percentage,
+        captain_per_match_percentile=captain_per_match_percentile,
+        average_captain_time=average_captain_time,
+        captain_time_percentile=captain_time_percentile,
+        top_3_maps_picked_as_captain=top_maps_picked_as_captain,
+        # best_teammate=best_teammate,
+    )
+
+@app.context_processor
+def inject_compute_rgb():
+    return dict(compute_rgb=compute_rgb)
 
 
 @app.route('/route-decoder', methods=['GET', 'POST'])

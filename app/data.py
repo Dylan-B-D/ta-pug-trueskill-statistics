@@ -73,7 +73,7 @@ def apply_mappings(combined_data):
     print(f"Applied mappings to {mapping_applied_count} players.")
     return combined_data
 
-def fetch_data(start_date, end_date, queue):
+def fetch_data_api(start_date, end_date, queue):
     cached_data = load_from_cache(queue)
     if cached_data:
         return cached_data
@@ -141,6 +141,75 @@ def fetch_data(start_date, end_date, queue):
     return mapped_data
 
 
+def fetch_data(start_date, end_date, queue):
+    cached_data = load_from_cache(queue)
+    if cached_data:
+        return cached_data
+
+    # Define URL, JSON replace, and queue filter based on queue choice
+    if queue == '2v2':
+        urls = ['https://sh4z.se/pugstats/naTA.json']
+        json_replaces = ['datanaTA = ']
+        queue_filters = ['2v2']
+    elif queue == 'NA':
+        urls = ['https://sh4z.se/pugstats/naTA.json']
+        json_replaces = ['datanaTA = ']
+        queue_filters = ['PUGz']
+    elif queue == 'EU':
+        urls = ['https://sh4z.se/pugstats/ta.json']
+        json_replaces = ['datata = ']
+        queue_filters = ['PUG']
+    elif queue == 'All':
+        urls = [
+            'https://sh4z.se/pugstats/naTA.json',
+            'https://sh4z.se/pugstats/ta.json'
+        ]
+        json_replaces = ['datanaTA = ', 'datata = ']
+        queue_filters = ['PUGz', 'PUG']
+    else:
+        raise ValueError(f"Invalid queue: {queue}")
+
+    combined_data = []
+    response_times = {}
+
+    for url, json_replace, queue_filter in zip(urls, json_replaces, queue_filters):
+        start_time = time.time()
+        
+        response = requests.get(url)
+        
+        end_time = time.time()
+        response_time = end_time - start_time  # response time in seconds
+
+        response_times[queue_filter] = response_time
+
+        json_content = response.text.replace(json_replace, '')
+
+        match = re.search(r'\[.*\]', json_content)
+        if match:
+            json_content = match.group(0)
+            game_data = json.loads(json_content)
+            
+            # Filter for games
+            filtered_data = [game for game in game_data
+                             if game['queue']['name'] == queue_filter
+                             and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date]
+            combined_data.extend(filtered_data)
+        else:
+            raise ValueError("No valid JSON data found in response.")
+    
+    print(f"Fetched {len(combined_data)} games for {queue} queue.")
+    
+    for q, r_time in response_times.items():
+        print(f"Response time for {q} queue: {r_time:.4f} seconds.")
+
+    mapped_data = apply_mappings(combined_data)
+    save_to_cache(mapped_data, queue)    
+    return mapped_data
+
+# Ensure that you have the necessary functions like load_from_cache, apply_mappings, and save_to_cache defined elsewhere in your code.
+
+
+
 
 def print_ratings(player_ratings, player_names):
     sorted_players = sorted(player_ratings.keys(), key=lambda x: (-player_ratings[x].mu, player_ratings[x].sigma))
@@ -185,25 +254,27 @@ def calculate_ratings(game_data, queue='NA'):
 
     # Initialize TrueSkill
     draw_rate = calculate_draw_rate(queue)
-    if queue == 'NA':
-        ts = trueskill.TrueSkill()
-    else:
-        ts = trueskill.TrueSkill(draw_probability=draw_rate)
+    custom_tau = 0.1
+    ts = trueskill.TrueSkill(draw_probability=draw_rate, tau=custom_tau) if queue != 'NA' else trueskill.TrueSkill(tau=custom_tau)
 
-    # Collect all player ids, their pick orders, and their wins
+
+    # Initialize tracking variables
     all_player_ids = set(player['user']['id'] for match in game_data for player in match['players'])
     player_picks = {player_id: [] for player_id in all_player_ids}
     player_wins = {player_id: 0 for player_id in all_player_ids}
     player_names = {player['user']['id']: player['user']['name'] for match in game_data for player in match['players']}
     player_games = {player_id: 0 for player_id in all_player_ids}
+    player_rating_history = {player_id: [] for player_id in all_player_ids}
 
+    # Process each match
     for match in game_data:
         for player in match['players']:
-            player_games[player['user']['id']] += 1
-            if player['pickOrder'] is not None and player['pickOrder'] > 0:  # Exclude captains and handle None
-                player_picks[player['user']['id']].append(player['pickOrder'])
+            player_id = player['user']['id']
+            player_games[player_id] += 1
+            if player['pickOrder'] is not None and player['pickOrder'] > 0:
+                player_picks[player_id].append(player['pickOrder'])
             if match['winningTeam'] == player['team']:
-                player_wins[player['user']['id']] += 1
+                player_wins[player_id] += 1
 
     # Compute average pick rates and win rates
     def recent_games_count(total_games):
@@ -246,15 +317,14 @@ def calculate_ratings(game_data, queue='NA'):
         pick_order_factor = pick_order_sigma_adjustment(pick_order)  # Using the previously defined function
         return games_played_factor * pick_order_factor
 
+    # Initialize ratings
     player_ratings = {}
     for player_id, avg_pick in player_avg_picks.items():
-        # For players with less than 20 games
-        if player_games[player_id] < 20:
-            mu = 25
-            sigma = 8.33333
-        else:
+        if queue != '2v2':
             mu = ts.mu + mu_bonus(avg_pick)
-            sigma = ts.sigma * sigma_adjustment(player_games[player_id], avg_pick)
+        else:
+            mu = ts.mu
+        sigma = ts.sigma * sigma_adjustment(player_games[player_id], avg_pick)
         
         # Ensure mu ± 3*sigma lies within [0, 50]
         sigma = min(sigma, (50 - mu) / 3, mu / 3)
@@ -282,18 +352,34 @@ def calculate_ratings(game_data, queue='NA'):
             team_player_ids.reverse()
 
         # Update ratings based on match outcome
-        new_ratings = ts.rate(teams)
+        try:
+            # Update ratings based on match outcome
+            new_ratings = ts.rate(teams)
+        except FloatingPointError:
+            # Handle numerical instability error
+            continue
         
         # Store the updated skill ratings
         for i, team in enumerate(teams):
             for j, player_rating in enumerate(team):
                 player_ratings[team_player_ids[i][j]] = new_ratings[i][j]
 
+        for i, team in enumerate(teams):
+            for j, player_rating in enumerate(team):
+                player_id = team_player_ids[i][j]
+                player_ratings[player_id] = new_ratings[i][j]
+                
+                # Convert Rating object to a dictionary
+                rating_dict = {"mu": new_ratings[i][j].mu, "sigma": new_ratings[i][j].sigma}
+                
+                # Append the dictionary to player's rating history
+                player_rating_history[player_id].append(rating_dict)
+
     # print("Final Ratings after Match Processing:")
     # print_ratings(player_ratings, player_names)
     # print("\n")
 
-    return player_ratings, player_names, player_games
+    return player_ratings, player_names, player_games, player_rating_history
 
 
 
@@ -377,7 +463,7 @@ def plot_player_quality_over_time_with_moving_avg(game_data, player_ratings, win
 
 def calculate_win_rate_on_map_for_team(queue, map_name):
     # 1. Fetch match data for the specified queue
-    player_ratings, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), queue), queue)
+    player_ratings, _, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), queue), queue)
     match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), queue, player_ratings)
 
     # 2. Filter for matches on the specified map
@@ -455,7 +541,7 @@ def compute_average_captain_time(queue):
 
 def player_win_rate_on_maps(player_name, queue, team="0"):
     # 1. Fetch match data for the specified queue
-    player_ratings, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), queue), queue)
+    player_ratings, _, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), queue), queue)
     match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), queue, player_ratings)
 
     # 2. Filter for matches the player participated in based on the specified team
@@ -582,47 +668,537 @@ def calculate_accuracy(match_data):
         'above_65_90': (accuracy_65_90, correct_65_90, total_65_90)
     }
 
-def simulate_mu_bonus_parameters(game_data, a_range, b_range, c_range):
-    best_accuracy = 0
-    best_params = None
-    total_combinations = len(a_range) * len(b_range) * len(c_range)
-    current_combination = 0
-    start_time = time.time()
-    print(f"Simulation Started")
-    for a in a_range:
-        for b in b_range:
-            for c in c_range:
-                # Update the mu_bonus function with the current values of a, b, c
-                def mu_bonus(pick_order, win_rate):
-                    bonus = a * pick_order**2 + b * pick_order + c
-                    return bonus * win_rate
+def compute_rgb(percentile):
+    if percentile is None:
+        return (255, 255, 255)  # default value or any other handling for None
+    
+    # Ensure percentile is a number
+    try:
+        percentile = float(percentile)
+    except ValueError:
+        # handle unexpected value, maybe log or raise a custom error
+        raise ValueError(f"Unexpected value for percentile: {percentile}")
 
-                # Use your rating calculation with the updated mu_bonus function
-                player_ratings, _, _ = calculate_ratings(fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA'), 'NA')
+    percentile = max(0, min(100, percentile))
 
-                # Fetch match data for accuracy calculation
-                match_data = fetch_match_data(datetime(2018, 11, 1), datetime.now(), 'NA', player_ratings)
-                accuracy_data = calculate_accuracy(match_data)
+    if percentile > 50:
+        # Lerp between yellow (255,255,0) and green (0,255,0)
+        factor = (100 - percentile) / 50  # Adjust the factor to decrease red from 255 to 0
+        red = int(255 * factor)
+        green = 255
+    else:
+        # Lerp between yellow (255,255,0) and red (255,0,0)
+        factor = percentile / 50
+        red = 255
+        green = int(255 * factor)
+    return red, green, 0
+
+
+epsilon = 1e-10
+
+def calculate_percentile(value, dataset):
+    dataset = [d for d in dataset if d is not None]  # Filter out None values
+
+    if not dataset:  # Check if the dataset is empty after filtering
+        return None
+
+    if value == min(dataset):
+        return epsilon
+    elif value == max(dataset):
+        return 100 - epsilon
+
+    count = sum(1 for d in dataset if d < value)
+    percentile = count / len(dataset) * 100
+    return percentile
+
+def calculate_percentile_inverse(value, dataset):
+    dataset = [d for d in dataset if d is not None]  # Filter out None values
+
+    if not dataset:  # Check if the dataset is empty after filtering
+        return None
+
+    if value == max(dataset):
+        return epsilon
+    elif value == min(dataset):
+        return 100 - epsilon
+
+    count = sum(1 for d in dataset if d > value)
+    percentile = count / len(dataset) * 100
+    return percentile
+
+
+def ordinal(n):
+    if 10 <= n % 100 <= 20:
+        suffix = 'th'
+    else:
+        suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
+    return f"{n}{suffix}"
+
+
+def calculate_win_rate(player_name, game_data):
+    total_games = 0
+    wins = 0
+
+    for game in game_data:
+        if game['winningTeam'] == 0:
+            continue
+
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                total_games += 1
+                if game['winningTeam'] == player['team']:
+                    wins += 1
+
+    if total_games == 0:
+        return 0
+
+    return wins / total_games * 100
+
+def player_win_rate_percentile(player_name, game_data):
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_win_rates = [calculate_win_rate(name, game_data) for name in all_players]
+    player_win_rate = calculate_win_rate(player_name, game_data)
+    
+    return calculate_percentile(player_win_rate, all_players_win_rates)
+
+
+def calculate_average_pick(player_name, game_data):
+    total_pick_order = 0
+    games = 0
+
+    for game in game_data:
+        for player in game['players']:
+            pick_order = player.get('pickOrder')
+            
+            if player['user']['name'] == player_name and pick_order not in [None, 0]:
+                total_pick_order += pick_order
+                games += 1
+
+    if games == 0:
+        return 0
+
+    return total_pick_order / games
+
+def player_average_pick_percentile(player_name, game_data):
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_avg_picks = [calculate_average_pick(name, game_data) for name in all_players]
+    player_avg_pick = calculate_average_pick(player_name, game_data)
+    
+    return calculate_percentile_inverse(player_avg_pick, all_players_avg_picks)
+
+
+
+def calculate_total_games(player_name, game_data):
+    total_games = 0
+
+    for game in game_data:
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                total_games += 1
+                break
+
+    return total_games
+
+def calculate_total_games(player_name, game_data):
+    games = [1 for game in game_data for player in game['players'] if player['user']['name'] == player_name]
+    return sum(games)
+
+def player_total_games_percentile(player_name, game_data):
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_total_games = [calculate_total_games(name, game_data) for name in all_players]
+    player_total_games = calculate_total_games(player_name, game_data)
+    
+    return calculate_percentile(player_total_games, all_players_total_games)
+
+
+def calculate_last_played(player_name, game_data):
+    for game in reversed(game_data):
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                last_played = datetime.fromtimestamp(game['timestamp'] / 1000)
+                return time_ago(last_played)
+    return None
+
+def calculate_win_loss_tie(player_name, game_data):
+    wins = 0
+    losses = 0
+    ties = 0
+
+    for game in game_data:
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                if game['winningTeam'] == 0:
+                    ties += 1
+                elif game['winningTeam'] == player['team']:
+                    wins += 1
+                else:
+                    losses += 1
+                break  # Break out of the inner loop once the player has been found in this game
+
+    return wins, losses, ties
+
+def calculate_peak_rating(player_id, player_rating_history):
+    if player_id not in player_rating_history:
+        return None
+
+    if len(player_rating_history[player_id]) > 30:
+        ratings = player_rating_history[player_id][30:]
+    else:
+        ratings = player_rating_history[player_id]
+    
+    peak = max(ratings, key=lambda x: x['mu'])
+    return peak['mu']
+
+
+def calculate_percentage_within_five_percent_of_peak(player_id, player_rating_history):
+    if player_id not in player_rating_history:
+        return "N/A"  
+
+    peak = calculate_peak_rating(player_id, player_rating_history)
+    
+    if len(player_rating_history[player_id]) > 30:
+        ratings = player_rating_history[player_id][30:]
+    else:
+        ratings = player_rating_history[player_id]
+    
+    within_range_count = sum(1 for rating in ratings if (0.95 * peak) <= rating['mu'] <= (1.05 * peak))
+    
+    percentage_within_range = (within_range_count / len(ratings)) * 100
+    return f"{percentage_within_range:.2f}%"  # Returns the value as a formatted percentage string (e.g., "23.45%")
+
+
+def calculate_rank_at_peak(player_id, player_rating_history):
+    if player_id not in player_rating_history:
+        return "N/A" 
+
+    peak = calculate_peak_rating(player_id, player_rating_history)
+    peak_index = next(i for i, rating in enumerate(player_rating_history[player_id]) if rating['mu'] == peak)
+    
+    all_ratings_at_peak = [player_ratings[peak_index]['mu'] for player_ratings in player_rating_history.values() if len(player_ratings) > peak_index]
+    sorted_ratings = sorted(all_ratings_at_peak, reverse=True)
+    rank = sorted_ratings.index(peak) + 1  # Add 1 because list indices start from 0
+    return ordinal(rank)
+
+def player_peak_rating_percentile(player_id, player_rating_history):
+
+    # Get the peak rating for the specified player
+    player_peak = calculate_peak_rating(player_id, player_rating_history)
+
+    if player_peak is None:
+        return None
+
+    # Calculate the peak rating for each player and store in a list
+    all_player_peaks = [calculate_peak_rating(pid, player_rating_history) for pid in player_rating_history.keys()]
+
+    # Filter out any None values or the player's own peak for a fair comparison
+    all_player_peaks = [peak for peak in all_player_peaks if peak is not None and peak != player_peak]
+
+    # Calculate the percentile using the provided function
+    percentile = calculate_percentile(player_peak, all_player_peaks)
+
+    return percentile
+
+def get_total_games_for_player(player_id, player_rating_history):
+    return len(player_rating_history.get(player_id, []))
+
+
+def player_percentage_within_five_percent_of_peak_percentile(player_id, player_rating_history):
+
+    # Get the percentage for the specified player
+    player_percentage = calculate_percentage_within_five_percent_of_peak(player_id, player_rating_history)
+
+    # Convert it from string to float for calculations
+    if player_percentage != "N/A":
+        player_percentage = float(player_percentage.rstrip('%'))
+    else:
+        return None
+
+    # Calculate the percentage for each player and store in a list
+    all_player_percentages = []
+    for pid in player_rating_history.keys():
+        if get_total_games_for_player(pid, player_rating_history) > 30:
+            percentage = calculate_percentage_within_five_percent_of_peak(pid, player_rating_history)
+            if percentage != "N/A":
+                all_player_percentages.append(float(percentage.rstrip('%')))
+
+    # Calculate the percentile using the provided function
+    percentile = calculate_percentile(player_percentage, all_player_percentages)
+
+    return percentile
+
+def ordinal_to_integer(ordinal_str):
+    return int(''.join(filter(str.isdigit, ordinal_str)))
+
+def player_rank_at_peak_percentile(player_id, players_rating_history):
+    
+    # Get the rank at peak for the specified player
+    player_rank = calculate_rank_at_peak(player_id, players_rating_history)
+    
+    if player_rank == "N/A":
+        return None
+    
+    # Convert the player's rank to an integer for calculations
+    player_rank_int = ordinal_to_integer(player_rank)
+
+    # Calculate the rank at peak for each player and store in a list
+    all_player_ranks = [ordinal_to_integer(calculate_rank_at_peak(pid, players_rating_history)) for pid in players_rating_history if calculate_rank_at_peak(pid, players_rating_history) != "N/A"]
+    
+    # Calculate the percentile using the provided function
+    percentile = calculate_percentile_inverse(player_rank_int, all_player_ranks)
+
+    return percentile
+
+def calculate_times_captained(player_name, game_data):
+    captain_count = 0
+
+    for game in game_data:
+        for player in game['players']:
+            if player['user']['name'] == player_name and player.get('pickOrder') == 0:
+                captain_count += 1
+                break  # Break out of the inner loop once the player has been found in this game
+
+    return captain_count
+
+def player_times_captained_percentile(player_name, game_data):
+    # Get the times captained for the target player
+    player_captained_count = calculate_times_captained(player_name, game_data)
+    
+    # Calculate the times captained for all players
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_captained_counts = [calculate_times_captained(name, game_data) for name in all_players]
+    
+    # Calculate the percentile using the provided function
+    percentile = calculate_percentile(player_captained_count, all_players_captained_counts)
+
+    return percentile
+
+def calculate_captain_winrate(player_name, game_data):
+    captain_games = 0
+    captain_wins = 0
+
+    for game in game_data:
+        if game['winningTeam'] == 0:  # Exclude ties
+            continue
+
+        for player in game['players']:
+            if player['user']['name'] == player_name and player.get('pickOrder') == 0:
+                captain_games += 1
+
+                if game['winningTeam'] == player['team']:
+                    captain_wins += 1
+
+                break  # Break out of the inner loop once the player has been found in this game
+
+    # Avoid division by zero if the player has never been a captain
+    if captain_games == 0:
+        return 0
+
+    return (captain_wins / captain_games) * 100  # Return win rate as a percentage
+
+def player_captain_winrate_percentile(player_name, game_data):
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+
+    # Get the captain winrates for all players who have captained at least once
+    all_players_captain_winrates = [calculate_captain_winrate(name, game_data) for name in all_players if calculate_times_captained(name, game_data) > 0]
+
+    # Calculate the captain winrate for the specified player
+    player_captain_winrate = calculate_captain_winrate(player_name, game_data)
+
+    # If the player hasn't captained, return None or an appropriate message
+    if calculate_times_captained(player_name, game_data) == 0:
+        return None  # Or return "The player hasn't captained."
+
+    # Calculate the percentile using the provided function
+    return calculate_percentile(player_captain_winrate, all_players_captain_winrates)
+
+def calculate_captain_per_match_percentage(player_name, game_data):
+    total_games_played = calculate_total_games(player_name, game_data)
+    
+    if total_games_played == 0:
+        return 0  # To avoid division by zero. You can also return "N/A" or any other placeholder value.
+
+    captain_count = calculate_times_captained(player_name, game_data)
+
+    return (captain_count / total_games_played) * 100
+
+def player_captain_per_match_percentile(player_name, game_data):
+    player_percentage = calculate_captain_per_match_percentage(player_name, game_data)
+    
+    # Calculate "Captain per Match %" for all players
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_percentages = [calculate_captain_per_match_percentage(name, game_data) for name in all_players]
+
+    # Filter out players who have never been a captain for a fair comparison
+    all_players_percentages = [percentage for percentage in all_players_percentages if percentage > 0]
+
+    return calculate_percentile(player_percentage, all_players_percentages)
+
+def calculate_average_captain_time(player_name, game_data, map_data):
+    # Initialize the accumulative captain time and counts for the specific player
+    captain_time = 0
+    captain_count = 0
+
+    for game in game_data:
+        for player in game['players']:
+            if player['captain'] and player['user']['name'] == player_name:
+                # Find the subsequent timestamp for the end of the match
+                subsequent_timestamps = [entry['timestamp'] for entry in map_data if entry['timestamp'] > game['timestamp']]
+                if subsequent_timestamps:
+                    closest_subsequent_timestamp = min(subsequent_timestamps)
+                    time_taken = (closest_subsequent_timestamp - game['timestamp']) / (60 * 1000)  # Convert to minutes
+
+                    # Ensure the time taken is within a reasonable timeframe (e.g., 20 minutes)
+                    if 0 <= time_taken <= 30:
+                        captain_time += time_taken
+                        captain_count += 1
+
+    if captain_count == 0:  # Avoid division by zero
+        return 0
+    
+    avg_time_in_minutes = captain_time / captain_count
+    return avg_time_in_minutes
+
+def format_captain_time(avg_time_in_minutes):
+    hours = int(avg_time_in_minutes // 60)
+    minutes = int(avg_time_in_minutes % 60)
+    seconds = int((avg_time_in_minutes * 60) % 60)  # Convert remaining minutes to seconds
+
+    if hours > 0:
+        return "{} hours {} mins {} sec".format(hours, minutes, seconds)
+    else:
+        return "{} mins {} sec".format(minutes, seconds)
+
+def player_captain_time_percentile(player_name, game_data, map_data):
+    player_time = calculate_average_captain_time(player_name, game_data, map_data)
+    
+    # Calculate average captain time for all players
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_times = [calculate_average_captain_time(name, game_data, map_data) for name in all_players]
+
+    # Filter out players who have never been a captain for a fair comparison
+    all_players_times = [time for time in all_players_times if time > 0]
+
+    return calculate_percentile_inverse(player_time, all_players_times)
+
+def calculate_top_maps_picked_as_captain(player_name, game_data, map_data):
+    # Map counter
+    map_counts = {}
+
+    for game in game_data:
+        for player in game['players']:
+            if player['captain'] and player['user']['name'] == player_name:
+                match_timestamp = game['timestamp']
+
+                # Find the closest timestamp in map_data that is not older than the match's timestamp
+                subsequent_map_entries = [entry for entry in map_data if entry['timestamp'] >= match_timestamp]
+                if subsequent_map_entries:
+                    closest_map_entry = min(subsequent_map_entries, key=lambda x: x['timestamp'])
+                    for map_name in closest_map_entry['maps']:
+                        map_counts[map_name] = map_counts.get(map_name, 0) + 1
+
+    # Sort maps by pick frequency and get the top
+    sorted_maps = sorted(map_counts.items(), key=lambda x: x[1], reverse=True)
+    top_maps = sorted_maps[:5]
+    
+    total_picks = sum(map_counts.values())
+    
+    # Format output using map_name_mapping and calculate the percentages
+    output = []
+    for map_name, count in top_maps:
+        readable_name = map_name_mapping.get(map_name, map_name)  # Get readable name, default to map_name if not found in mapping
+        percentage = (count / total_picks) * 100
+        output.append(f"{readable_name} {percentage:.1f}%, ")
+    
+    return "\n".join(output)
+
+def calculate_best_teammate(player_name, game_data, player_ratings):
+    ts = trueskill.TrueSkill()
+    
+    teammate_ratings = {}
+    games_played_with_teammate = {}
+    
+    # Identify games with the specified player
+    for match in game_data:
+        for player in match['players']:
+            if player['user']['name'] == player_name:
+                player_team = player['team']
                 
-                # Check if this combination gives better accuracy than previously found
-                if accuracy_data['all'][0] > best_accuracy:
-                    best_accuracy = accuracy_data['all'][0]
-                    best_params = (a, b, c)
+                # Split players into teammates and opponents
+                teammates = [p for p in match['players'] if p['team'] == player_team and p['user']['name'] != player_name]
+                opponents = [p for p in match['players'] if p['team'] != player_team]
+                
+                # Create or fetch ratings for each teammate
+                teammate_ids = [tm['user']['id'] for tm in teammates]
+                for tm_id in teammate_ids:
+                    if tm_id not in teammate_ratings:
+                        teammate_ratings[tm_id] = player_ratings.get(tm_id, ts.create_rating())
+                        games_played_with_teammate[tm_id] = 0
+                
+                opponent_ratings = [player_ratings.get(p['user']['id'], ts.create_rating()) for p in opponents]
+                
+                teams = [[teammate_ratings[tm_id] for tm_id in teammate_ids]] + [opponent_ratings]
 
-                current_combination += 1
-                if current_combination % (total_combinations // 20) == 0:  # 5% progress
-                    elapsed_time = time.time() - start_time
-                    print(f"{(current_combination / total_combinations) * 100:.2f}% done. Elapsed time: {elapsed_time:.2f}s")
+                if match['winningTeam'] == player_team:
+                    new_ratings = ts.rate(teams, ranks=[0, 1])
+                else:
+                    new_ratings = ts.rate(teams, ranks=[1, 0])
 
-    total_time = time.time() - start_time
-    print(f"Simulation completed in {total_time:.2f}s")
-    print(f"Best parameters found: a = {best_params[0]}, b = {best_params[1]}, c = {best_params[2]} with accuracy = {best_accuracy:.4f}")
-
-# Define your search space for a, b, and c
-a_range = [-0.7, -0.65, -0.6, -0.55, -0.5]
-b_range = [0.3, 0.45, 0.6, 0.75, 0.9]
-c_range = [-8.5, -8, -7.5, -7, -6.5]
+                # Update ratings for each teammate from the first team's ratings
+                for idx, tm_id in enumerate(teammate_ids):
+                    teammate_ratings[tm_id] = new_ratings[0][idx]
 
 
-game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')
-# simulate_mu_bonus_parameters(game_data, a_range, b_range, c_range)
+
+                    
+    # Filter teammates with more than 20 games unless there are no such teammates
+    if max(games_played_with_teammate.values()) >= 20:
+        eligible_teammates = {k: v for k, v in games_played_with_teammate.items() if v >= 20}
+    else:
+        eligible_teammates = games_played_with_teammate
+        
+    # Sort teammates by ratings
+    sorted_teammates = sorted(eligible_teammates.keys(), key=lambda k: (teammate_ratings[k].mu - 3 * teammate_ratings[k].sigma), reverse=True)
+    
+    # Return top 25 teammates with their names and ratings
+    top_25_teammates = []
+    for teammate_id in sorted_teammates[:25]:
+        teammate_info = {
+            "name": player_names[teammate_id],
+            "rating": {
+                "mu": teammate_ratings[teammate_id].mu,
+                "sigma": teammate_ratings[teammate_id].sigma
+            }
+        }
+        top_25_teammates.append(teammate_info)
+        
+    return top_25_teammates
+
+
+
+def time_ago(past):
+    now = datetime.now()
+
+    # Time differences in different periods
+    delta_seconds = (now - past).total_seconds()
+    delta_minutes = delta_seconds / 60
+    delta_hours = delta_minutes / 60
+    delta_days = delta_hours / 24
+    delta_weeks = delta_days / 7
+    delta_months = delta_days / 30.44  # Average number of days in a month
+    delta_years = delta_days / 365.25  # Average number of days in a year considering leap years
+
+    # Determine which format to use based on the period
+    if delta_seconds < 60:
+        return "{} second(s) ago".format(int(delta_seconds))
+    elif delta_minutes < 60:
+        return "{} minute(s) ago".format(int(delta_minutes))
+    elif delta_hours < 24:
+        return "{} hour(s) ago".format(int(delta_hours))
+    elif delta_days < 7:
+        return "{} day(s) ago".format(int(delta_days))
+    elif delta_weeks < 4.35:  # Approximately number of weeks in a month
+        return "{} week(s) ago".format(int(delta_weeks))
+    elif delta_months < 12:
+        return "{} month(s) ago".format(int(delta_months))
+    else:
+        return "{} year(s) ago".format(int(delta_years))

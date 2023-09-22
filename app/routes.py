@@ -41,9 +41,24 @@ from app.data import (
     format_captain_time,
     calculate_top_maps_picked_as_captain,
     calculate_best_teammate,
+    calculate_longest_streaks,
+    player_win_streaks_percentile,
+    player_loss_streaks_percentile,
+    calculate_longest_winrate_over_30_games,
+    player_longest_winrate_over_30_games_percentile,
+    calculate_percentage_of_unexpected_wins,
+    calculate_percentage_of_unexpected_losses,
+    player_percentage_of_unexpected_wins_percentile,
+    player_percentage_of_unexpected_losses_percentile,
+    calculate_consistency,
+    
 )
 import os
 from datetime import datetime
+from jinja2 import pass_eval_context
+from markupsafe import Markup, escape
+import re
+
 
 
 files_to_delete_after_request = set()
@@ -211,6 +226,17 @@ def autocomplete_player():
     return jsonify(matching_players)
 
 
+@app.template_filter()
+@pass_eval_context
+def nl2br(eval_ctx, value):
+    _paragraph_re = re.compile(r'(?:\r\n|\r|\n){2,}')
+    result = u'\n\n'.join(u'<p>%s</p>' % p.replace('\n', '<br>\n') for p in _paragraph_re.split(escape(value)))
+    if eval_ctx.autoescape:
+        result = Markup(result)
+    return result
+
+
+
 @app.route('/player_stats', methods=['GET', 'POST'])
 def player_stats():
     player_name = request.args.get('player_search') or request.form.get('player_search')
@@ -263,7 +289,19 @@ def player_stats():
         average_captain_time = format_captain_time(avg_time)
         captain_time_percentile = player_captain_time_percentile(player_name, game_data, map_data)
         top_maps_picked_as_captain = calculate_top_maps_picked_as_captain(player_name, game_data, map_data)
-        # best_teammate = calculate_best_teammate(player_name, game_data, player_ratings)
+        best_teammate = calculate_best_teammate(player_name, game_data)
+        streaks = calculate_longest_streaks(player_name, game_data)
+        win_streaks = streaks["win_streaks"]
+        loss_streaks = streaks["lose_streaks"]
+        loss_streaks_percentile= player_loss_streaks_percentile(player_name, game_data)
+        win_streaks_percentile = player_win_streaks_percentile(player_name, game_data)
+        longest_winrate_over_30_games = calculate_longest_winrate_over_30_games(player_name, game_data)
+        longest_winrate_over_30_games_percentile = player_longest_winrate_over_30_games_percentile(player_name, game_data)
+        percentage_of_unexpected_wins = calculate_percentage_of_unexpected_wins(player_name, game_data, player_rating_history)
+        percentage_of_unexpected_losses = calculate_percentage_of_unexpected_losses(player_name, game_data, player_rating_history)
+        percentage_of_unexpected_wins_percentile = player_percentage_of_unexpected_wins_percentile(player_name, game_data, player_rating_history)
+        percentage_of_unexpected_losses_percentile =player_percentage_of_unexpected_losses_percentile(player_name, game_data, player_rating_history)
+        consistency = calculate_consistency(player_name, game_data, player_rating_history)
 
         if peak_rating is None:
             peak_rating = 'N/A'
@@ -304,7 +342,18 @@ def player_stats():
         average_captain_time = None
         captain_time_percentile = None
         top_maps_picked_as_captain = None
-        # best_teammate = None
+        best_teammate = None
+        win_streaks = None
+        win_streaks_percentile = None
+        loss_streaks = None
+        loss_streaks_percentile = None
+        longest_winrate_over_30_games = None
+        longest_winrate_over_30_games_percentile = None
+        percentage_of_unexpected_wins = None
+        percentage_of_unexpected_losses = None
+        percentage_of_unexpected_wins_percentile = None
+        percentage_of_unexpected_losses_percentile = None
+        consistency = None
     
 
     return render_template(
@@ -339,13 +388,24 @@ def player_stats():
         average_captain_time=average_captain_time,
         captain_time_percentile=captain_time_percentile,
         top_3_maps_picked_as_captain=top_maps_picked_as_captain,
-        # best_teammate=best_teammate,
+        best_teammate=best_teammate,
+        win_streaks=win_streaks,
+        win_streaks_percentile=win_streaks_percentile,
+        loss_streaks=loss_streaks,
+        loss_streaks_percentile=loss_streaks_percentile,
+        longest_winrate_over_30_games=longest_winrate_over_30_games,
+        longest_winrate_over_30_games_percentile=longest_winrate_over_30_games_percentile,
+        percentage_of_unexpected_wins = percentage_of_unexpected_wins,
+        percentage_of_unexpected_losses=percentage_of_unexpected_losses,
+        percentage_of_unexpected_wins_percentile=percentage_of_unexpected_wins_percentile,
+        percentage_of_unexpected_losses_percentile=percentage_of_unexpected_losses_percentile,
+        consistency=consistency,
+
     )
 
 @app.context_processor
 def inject_compute_rgb():
     return dict(compute_rgb=compute_rgb)
-
 
 @app.route('/route-decoder', methods=['GET', 'POST'])
 def route_decoder():

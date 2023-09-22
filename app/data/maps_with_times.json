@@ -1,5 +1,455 @@
 [
     {
+        "timestamp": 1695351358001,
+        "maps": [
+            "tartarus"
+        ]
+    },
+    {
+        "timestamp": 1695348584333,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1695283360328,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1695274987364,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1695272872024,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1695268966112,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1695265127102,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1695262760580,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1695259323941,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1695256504118,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1695254270951,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1695192639299,
+        "maps": [
+            "oceanus"
+        ]
+    },
+    {
+        "timestamp": 1695189778592,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1695186711076,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1695183894089,
+        "maps": [
+            "sunstar"
+        ]
+    },
+    {
+        "timestamp": 1695181409079,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1695178755115,
+        "maps": [
+            "permafrost"
+        ]
+    },
+    {
+        "timestamp": 1695098548828,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1695096115157,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1695093484850,
+        "maps": [
+            "permafrost"
+        ]
+    },
+    {
+        "timestamp": 1695093004751,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1695088923101,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1695086368104,
+        "maps": [
+            "blues"
+        ]
+    },
+    {
+        "timestamp": 1695082460704,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1695015439274,
+        "maps": [
+            "drydock"
+        ]
+    },
+    {
+        "timestamp": 1695015045848,
+        "maps": [
+            "drydock"
+        ]
+    },
+    {
+        "timestamp": 1695012594386,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1695009699953,
+        "maps": [
+            "oceanus"
+        ]
+    },
+    {
+        "timestamp": 1695005127110,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1695002385374,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1694999707644,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1694996450225,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1694989301204,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694987752948,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694940876507,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694939225142,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694937725657,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694934905496,
+        "maps": [
+            "oceanus"
+        ]
+    },
+    {
+        "timestamp": 1694930173460,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1694920504801,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694918194923,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694913844928,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694911951775,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694911486787,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694909751564,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694908600808,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694903967303,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694845266285,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694842254979,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694836677965,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694831332362,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694829018695,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694826815003,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694826297887,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694761359493,
+        "maps": [
+            "lavaarena"
+        ]
+    },
+    {
+        "timestamp": 1694758302399,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1694754731785,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1694750405667,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694749373301,
+        "maps": [
+            "lavaarena"
+        ]
+    },
+    {
+        "timestamp": 1694745882300,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694672438831,
+        "maps": [
+            "lavaarena"
+        ]
+    },
+    {
+        "timestamp": 1694670695938,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
+        "timestamp": 1694668793949,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1694665469731,
+        "maps": [
+            "oceanus"
+        ]
+    },
+    {
+        "timestamp": 1694663448687,
+        "maps": [
+            "tartarus"
+        ]
+    },
+    {
+        "timestamp": 1694660735194,
+        "maps": [
+            "blues"
+        ]
+    },
+    {
+        "timestamp": 1694657625725,
+        "maps": [
+            "permafrost"
+        ]
+    },
+    {
+        "timestamp": 1694654323844,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1694651091546,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1694648780800,
+        "maps": [
+            "elysianbattlegrounds"
+        ]
+    },
+    {
+        "timestamp": 1694585136739,
+        "maps": [
+            "dangerouscrossing"
+        ]
+    },
+    {
+        "timestamp": 1694582868574,
+        "maps": [
+            "blues"
+        ]
+    },
+    {
+        "timestamp": 1694580532807,
+        "maps": [
+            "arxnovena"
+        ]
+    },
+    {
+        "timestamp": 1694577515082,
+        "maps": [
+            "katabatic"
+        ]
+    },
+    {
+        "timestamp": 1694574199834,
+        "maps": [
+            "walledin"
+        ]
+    },
+    {
         "timestamp": 1694499509511,
         "maps": [
             "elysianbattlegrounds"

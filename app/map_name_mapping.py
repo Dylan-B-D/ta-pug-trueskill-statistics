@@ -16,6 +16,7 @@ map_name_mapping = {
     "oceanus": "Oceanus",
     "other": "Other",
     "perma": "Perma",
+    "permafrost": "Perma",
     "raindance": "Raindance",
     "rd": "Raindance",
     "ss": "Sunstar",

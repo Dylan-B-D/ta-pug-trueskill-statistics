@@ -219,24 +219,35 @@
                         <td style="color: rgb({{ compute_rgb(captain_time_percentile)[0] }}, {{ compute_rgb(captain_time_percentile)[1] }}, 0)">{{ "{:.1f}".format(captain_time_percentile) + "%" if captain_time_percentile else 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td>Best Teammate</td>
-                        <td>N/A</td>
+                        <td>Best Teammates</td>
+                        <td>{{ best_teammate|replace('\n', '\n\n')|nl2br }}</td>
                         <td></td>
                     </tr>
+                    
                     <tr>
-                        <td>Longest Win Streak</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
+                        <td>Longest Win Streaks</td>
+                        <td>{{ win_streaks|replace("\n", "<br><br>")|safe }}</td>
+                        <td style="color: rgb({{ compute_rgb(win_streaks_percentile)[0] }}, {{ compute_rgb(win_streaks_percentile)[1] }}, 0)">{{ "{:.1f}".format(win_streaks_percentile) + "%" if win_streaks_percentile else 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td>Longest Loss Streak</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
+                        <td>{{ loss_streaks|replace("\n", "<br><br>")|safe }}</td>
+                        <td style="color: rgb({{ compute_rgb(loss_streaks_percentile)[0] }}, {{ compute_rgb(loss_streaks_percentile)[1] }}, 0)">{{ "{:.1f}".format(loss_streaks_percentile) + "%" if loss_streaks_percentile else 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td>Highest Winrate over 30 Games</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
+                        <td>
+                            {% if longest_winrate_over_30_games == "N/A" %}
+                                {{ longest_winrate_over_30_games }}
+                            {% else %}
+                                {{ "{:.2f}%".format(longest_winrate_over_30_games) }}
+                            {% endif %}
+                        </td>                        
+                        {% if longest_winrate_over_30_games_percentile == "N/A" %}
+                            <td>{{ 'N/A' }}</td>  <!-- This uses a gray color for "N/A" values -->
+                        {% else %}
+                            <td style="color: rgb({{ compute_rgb(longest_winrate_over_30_games_percentile)[0] }}, {{ compute_rgb(longest_winrate_over_30_games_percentile)[1] }}, 0)">{{ "{:.1f}".format(longest_winrate_over_30_games_percentile) + "%" }}</td>
+                        {% endif %}
                     </tr>
                     <tr>
                         <td>Consistency</td>
@@ -245,19 +256,19 @@
                     </tr>
                     <tr>
                         <td>% of unexpected wins</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
+                        <td>{{ "{:.2f}%".format(percentage_of_unexpected_wins) }}</td>
+                        <td style="color: rgb({{ compute_rgb(percentage_of_unexpected_wins_percentile)[0] }}, {{ compute_rgb(percentage_of_unexpected_wins_percentile)[1] }}, 0)">{{ "{:.1f}".format(percentage_of_unexpected_wins_percentile) + "%" if percentage_of_unexpected_wins_percentile else 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td>% of unexpected losses</td>
-                        <td>N/A</td>
-                        <td>N/A</td>
+                        <td>{{ "{:.2f}%".format(percentage_of_unexpected_losses) }}</td>
+                        <td style="color: rgb({{ compute_rgb(percentage_of_unexpected_losses_percentile)[0] }}, {{ compute_rgb(percentage_of_unexpected_losses_percentile)[1] }}, 0)">{{ "{:.1f}".format(percentage_of_unexpected_losses_percentile) + "%" if percentage_of_unexpected_losses_percentile else 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td>Top Maps Picked as Captain</td>
-                        <td>{{ top_3_maps_picked_as_captain }}</td>
+                        <td>Top Picked Maps as Captain</td>
+                        <td>{{ top_3_maps_picked_as_captain|replace(", ", "<br><br>")|safe }}</td>
                         <td></td>
-                    </tr>
+                    </tr>                    
                 </tbody>
             </table>
         </div>

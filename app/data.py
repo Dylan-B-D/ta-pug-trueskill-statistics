@@ -11,6 +11,8 @@ from scipy.special import logit
 import os
 import itertools
 import math
+from collections import defaultdict
+import statistics
 
 
 CACHE_FILE = "app/data/data_cache.json"
@@ -73,7 +75,7 @@ def apply_mappings(combined_data):
     print(f"Applied mappings to {mapping_applied_count} players.")
     return combined_data
 
-def fetch_data_api(start_date, end_date, queue):
+def fetch_data(start_date, end_date, queue):
     cached_data = load_from_cache(queue)
     if cached_data:
         return cached_data
@@ -141,7 +143,7 @@ def fetch_data_api(start_date, end_date, queue):
     return mapped_data
 
 
-def fetch_data(start_date, end_date, queue):
+def fetch_data_sh4z(start_date, end_date, queue):
     cached_data = load_from_cache(queue)
     if cached_data:
         return cached_data
@@ -1111,69 +1113,389 @@ def calculate_top_maps_picked_as_captain(player_name, game_data, map_data):
     
     return "\n".join(output)
 
-def calculate_best_teammate(player_name, game_data, player_ratings):
-    ts = trueskill.TrueSkill()
+def calculate_best_teammate(player_name, game_data):
+    MIN_GAMES = 20
+    NUM_TEAMMATES = 3
+    games_played_with_teammate = defaultdict(int)
+    teammate_winrates = defaultdict(int)
     
-    teammate_ratings = {}
-    games_played_with_teammate = {}
-    
-    # Identify games with the specified player
     for match in game_data:
-        for player in match['players']:
+        if match['winningTeam'] != 0:  # Skip ties
+            for player in match['players']:
+                if player['user']['name'] == player_name:
+                    player_team = player['team']
+                    teammates = [p for p in match['players'] if p['team'] == player_team and p['user']['name'] != player_name]
+                    teammate_ids = [tm['user']['id'] for tm in teammates]
+                    
+                    for tm_id in teammate_ids:
+                        games_played_with_teammate[tm_id] += 1
+                        if match['winningTeam'] == player_team:
+                            teammate_winrates[tm_id] += 1
+
+    teammate_win_percentages = []
+    for teammate_id, games_played in games_played_with_teammate.items():
+        if games_played >= MIN_GAMES:  # Only consider teammates with whom the player has played at least 20 games
+            win_percentage = (teammate_winrates[teammate_id] / games_played) * 100
+            teammate_name = None
+            for game in game_data:
+                potential_name = next((p['user']['name'] for p in game['players'] if p['user']['id'] == teammate_id), None)
+                if potential_name:
+                    teammate_name = potential_name
+                    break
+            teammate_win_percentages.append((teammate_name, win_percentage))
+    
+    sorted_teammates = sorted(teammate_win_percentages, key=lambda x: x[1], reverse=True)
+
+    top_teammates = [f"{name}: {percent:.2f}% win rate" for name, percent in sorted_teammates[:NUM_TEAMMATES]]
+
+    return '\n'.join(top_teammates)
+
+def calculate_longest_streaks(player_name, game_data):
+    current_streak = 0
+    streaks = []
+
+    for game in game_data:
+        player_team = None
+        result = None  # Possible values: 'win', 'loss', or None
+        player_participated = False
+
+        # Check if the player participated in the game and which team they were on
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                player_participated = True
+                player_team = player['team']
+                break
+
+        # If the player didn't participate, skip this game
+        if not player_participated:
+            continue
+
+        # If the player was in the game and their team won
+        if player_team is not None and game['winningTeam'] == player_team:
+            result = 'win'
+        # If the player was in the game and their team lost
+        elif player_team is not None and game['winningTeam'] != player_team and game['winningTeam'] != 0:
+            result = 'loss'
+        # If the game was a tie, continue to the next game
+        elif game['winningTeam'] == 0:
+            continue
+
+        # If the current streak is in line with the game result, increment the streak
+        if streaks and streaks[-1]['result'] == result:
+            streaks[-1]['count'] += 1
+        # If the current streak is different from the game result, start a new streak
+        else:
+            streaks.append({'result': result, 'count': 1})
+
+    # Extract win and loss streaks separately
+    win_streaks = sorted([s['count'] for s in streaks if s['result'] == 'win'], reverse=True)
+    lose_streaks = sorted([s['count'] for s in streaks if s['result'] == 'loss'], reverse=True)
+
+    def get_top_streaks(streak_list):
+        from collections import Counter
+        streak_counter = Counter(streak_list)
+        sorted_streaks = sorted(streak_counter.items(), key=lambda x: x[0], reverse=True)
+        top_streaks = []
+        for streak, count in sorted_streaks:
+            if count == 1:
+                top_streaks.append(str(streak))
+            else:
+                top_streaks.append(f"{streak}x{count}")
+            if len(top_streaks) == 3:  # Only take the top 3 streaks
+                break
+        return top_streaks
+
+    # Calculate the top streaks for both win and lose
+    top_win_streaks = get_top_streaks(win_streaks)
+    top_lose_streaks = get_top_streaks(lose_streaks)
+
+    return {
+        "win_streaks": "\n".join(top_win_streaks),
+        "lose_streaks": "\n".join(top_lose_streaks)
+    }
+
+
+def player_highest_streak(player_name, game_data, result_type="win"):
+    """Calculate the highest win or loss streak for a player.
+    
+    Args:
+        player_name (str): The name of the player.
+        game_data (list): List of game data dictionaries.
+        result_type (str): "win" to calculate win streak, "loss" to calculate loss streak.
+
+    Returns:
+        int: Highest streak count for the given result_type.
+    """
+    current_streak = 0
+    highest_streak = 0
+
+    for game in game_data:
+        player_team = None
+        player_result = None
+        player_participated = False
+
+        # Check if the player participated in the game and which team they were on
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                player_participated = True
+                player_team = player['team']
+                break
+
+        # If the player didn't participate, skip this game
+        if not player_participated:
+            continue
+
+        if player_team is not None and game['winningTeam'] == player_team:
+            player_result = 'win'
+        elif player_team is not None and game['winningTeam'] != player_team and game['winningTeam'] != 0:
+            player_result = 'loss'
+        # If the game was a tie
+        elif game['winningTeam'] == 0:
+            continue
+
+        # Update streaks based on win/loss
+        if player_result == result_type:
+            current_streak += 1
+            highest_streak = max(highest_streak, current_streak)
+        else:
+            current_streak = 0  # Reset current streak
+
+    return highest_streak
+
+def player_win_streaks_percentile(player_name, game_data):
+    player_streak = player_highest_streak(player_name, game_data, result_type="win")
+
+    # Calculate highest win streak for all players
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_streaks = [player_highest_streak(name, game_data, result_type="win") for name in all_players]
+
+    return calculate_percentile(player_streak, all_players_streaks)
+
+def player_loss_streaks_percentile(player_name, game_data):
+    player_streak = player_highest_streak(player_name, game_data, result_type="loss")
+
+    # Calculate highest loss streak for all players
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_streaks = [player_highest_streak(name, game_data, result_type="loss") for name in all_players]
+
+    return calculate_percentile_inverse(player_streak, all_players_streaks)
+
+
+def calculate_longest_winrate_over_30_games(player_name, game_data):
+    """Calculate the highest win rate over 30 consecutive games for a player.
+
+    Args:
+        player_name (str): The name of the player.
+        game_data (list): List of game data dictionaries.
+
+    Returns:
+        float or str: Highest win rate over 30 games or "N/A" if less than 30 games played.
+    """
+    # Filter games where the player participated
+    player_games = [game for game in game_data if any(player['user']['name'] == player_name for player in game['players'])]
+
+    # If the player hasn't played at least 30 games, return "N/A"
+    if len(player_games) < 30:
+        return "N/A"
+
+    max_winrate = 0
+
+    # Loop through the player's games and calculate the win rate for every sequence of 30 games
+    for i in range(len(player_games) - 29):
+        games_slice = player_games[i:i+30]
+        wins = sum(1 for game in games_slice if game['winningTeam'] == next(player['team'] for player in game['players'] if player['user']['name'] == player_name))
+        winrate = wins / 30.0
+        max_winrate = max(max_winrate, winrate)
+
+    return max_winrate * 100  # Convert to percentage
+
+def player_longest_winrate_over_30_games_percentile(player_name, game_data):
+
+    player_winrate = calculate_longest_winrate_over_30_games(player_name, game_data)
+    
+    if player_winrate == "N/A":
+        return "N/A"
+
+    all_players = set(player['user']['name'] for game in game_data for player in game['players'])
+    all_players_winrates = [calculate_longest_winrate_over_30_games(name, game_data) for name in all_players]
+
+    all_players_winrates = [rate for rate in all_players_winrates if rate != "N/A"]
+
+    return calculate_percentile(player_winrate, all_players_winrates)
+
+
+def calculate_percentage_of_unexpected_outcomes(player_name, game_data, player_rating_history, expected_to_win):
+    unexpected_outcomes = 0
+    total_advantage_or_disadvantage_games = 0
+
+    for idx, game in enumerate(game_data):
+        player_team = None
+        for player in game['players']:
             if player['user']['name'] == player_name:
                 player_team = player['team']
-                
-                # Split players into teammates and opponents
-                teammates = [p for p in match['players'] if p['team'] == player_team and p['user']['name'] != player_name]
-                opponents = [p for p in match['players'] if p['team'] != player_team]
-                
-                # Create or fetch ratings for each teammate
-                teammate_ids = [tm['user']['id'] for tm in teammates]
-                for tm_id in teammate_ids:
-                    if tm_id not in teammate_ratings:
-                        teammate_ratings[tm_id] = player_ratings.get(tm_id, ts.create_rating())
-                        games_played_with_teammate[tm_id] = 0
-                
-                opponent_ratings = [player_ratings.get(p['user']['id'], ts.create_rating()) for p in opponents]
-                
-                teams = [[teammate_ratings[tm_id] for tm_id in teammate_ids]] + [opponent_ratings]
+                break
 
-                if match['winningTeam'] == player_team:
-                    new_ratings = ts.rate(teams, ranks=[0, 1])
+        if player_team is not None and game['winningTeam'] != 0:
+            # Get ratings for this match from rating history
+            current_ratings = {}
+            for player in game['players']:
+                player_id = player['user']['id']
+                
+                if player_id not in player_rating_history:
+                    continue
+                
+                if idx < len(player_rating_history[player_id]):
+                    current_ratings[player_id] = trueskill.Rating(mu=player_rating_history[player_id][idx]['mu'],
+                                                                  sigma=player_rating_history[player_id][idx]['sigma'])
                 else:
-                    new_ratings = ts.rate(teams, ranks=[1, 0])
+                    current_ratings[player_id] = trueskill.Rating(mu=player_rating_history[player_id][-1]['mu'],
+                                                                  sigma=player_rating_history[player_id][-1]['sigma'])
 
-                # Update ratings for each teammate from the first team's ratings
-                for idx, tm_id in enumerate(teammate_ids):
-                    teammate_ratings[tm_id] = new_ratings[0][idx]
+            win_prob_team1 = calculate_win_probability_for_match(game, current_ratings)
+            
+            if expected_to_win:
+                was_at_advantage = (player_team == 1 and win_prob_team1 >= 0.5) or (player_team == 2 and win_prob_team1 < 0.5)
+                unexpected_outcome_condition = (player_team == 1 and game['winningTeam'] == 2) or (player_team == 2 and game['winningTeam'] == 1)
+            else:
+                was_at_advantage = (player_team == 1 and win_prob_team1 < 0.5) or (player_team == 2 and win_prob_team1 > 0.5)
+                unexpected_outcome_condition = (player_team == 1 and game['winningTeam'] == 1) or (player_team == 2 and game['winningTeam'] == 2)
+            
+            if was_at_advantage:
+                total_advantage_or_disadvantage_games += 1
+                if unexpected_outcome_condition:
+                    unexpected_outcomes += 1
+
+    if total_advantage_or_disadvantage_games == 0:
+        return 0
+
+    return (unexpected_outcomes / total_advantage_or_disadvantage_games) * 100
+
+def calculate_percentage_of_unexpected_wins(player_name, game_data, player_rating_history):
+    return calculate_percentage_of_unexpected_outcomes(player_name, game_data, player_rating_history, expected_to_win=False)
+
+def calculate_percentage_of_unexpected_losses(player_name, game_data, player_rating_history):
+    return calculate_percentage_of_unexpected_outcomes(player_name, game_data, player_rating_history, expected_to_win=True)
+
+def get_player_name_by_id(player_id, game_data):
+    for game in game_data:
+        for player in game['players']:
+            if player['user']['id'] == player_id:
+                return player['user']['name']
+    return None
+
+def player_percentage_of_unexpected_wins_percentile(player_name, game_data, player_rating_history):
+    all_players_unexpected_wins = {}
+
+    # Calculate unexpected wins for all players
+    for player_id in player_rating_history.keys():
+        player_name_from_id = get_player_name_by_id(player_id, game_data)
+        if player_name_from_id:
+            player_unexpected_wins = calculate_percentage_of_unexpected_wins(player_name_from_id, game_data, player_rating_history)
+            all_players_unexpected_wins[player_name_from_id] = player_unexpected_wins
+
+    # Calculate percentile for the specified player
+    player_unexpected_wins = all_players_unexpected_wins.get(player_name)
+    if player_unexpected_wins is None:
+        return None
+
+    return calculate_percentile(player_unexpected_wins, list(all_players_unexpected_wins.values()))
+
+def player_percentage_of_unexpected_losses_percentile(player_name, game_data, player_rating_history):
+    all_players_unexpected_losses = {}
+
+    # Calculate unexpected losses for all players
+    for player_id in player_rating_history.keys():
+        player_name_from_id = get_player_name_by_id(player_id, game_data)
+        if player_name_from_id:
+            player_unexpected_losses = calculate_percentage_of_unexpected_losses(player_name_from_id, game_data, player_rating_history)
+            all_players_unexpected_losses[player_name_from_id] = player_unexpected_losses
+
+
+    # Calculate percentile for the specified player
+    player_unexpected_losses = all_players_unexpected_losses.get(player_name)
+    if player_unexpected_losses is None:
+        return None
+
+    return calculate_percentile_inverse(player_unexpected_losses, list(all_players_unexpected_losses.values()))
 
 
 
-                    
-    # Filter teammates with more than 20 games unless there are no such teammates
-    if max(games_played_with_teammate.values()) >= 20:
-        eligible_teammates = {k: v for k, v in games_played_with_teammate.items() if v >= 20}
-    else:
-        eligible_teammates = games_played_with_teammate
+def calculate_consistency(player_name, game_data, player_rating_history):
+    # Collect the performance metrics (e.g., player rating changes) over games
+    player_ratings_changes = []
+    win_loss_streaks = []
+    current_streak = 0
+    last_game_result = None
+
+    for idx, game in enumerate(game_data):
+        player_team = None
+        for player in game['players']:
+            if player['user']['name'] == player_name:
+                player_team = player['team']
+                if idx < len(player_rating_history[player['user']['id']]):
+                    current_rating = player_rating_history[player['user']['id']][idx]['mu']
+                    if idx > 0:
+                        previous_rating = player_rating_history[player['user']['id']][idx-1]['mu']
+                        player_ratings_changes.append(current_rating - previous_rating)
+                break
         
-    # Sort teammates by ratings
-    sorted_teammates = sorted(eligible_teammates.keys(), key=lambda k: (teammate_ratings[k].mu - 3 * teammate_ratings[k].sigma), reverse=True)
+        # Win/Loss streak calculation
+        if player_team:
+            game_result = 1 if game['winningTeam'] == player_team else 0
+            if last_game_result is None:
+                current_streak = 1
+            elif last_game_result == game_result:
+                current_streak += 1
+            else:
+                win_loss_streaks.append(current_streak)
+                current_streak = 1
+            last_game_result = game_result
+
+    # End streak
+    if current_streak != 0:
+        win_loss_streaks.append(current_streak)
+
+    if len(player_ratings_changes) < 2:
+        print(f"Not enough rating changes for player {player_name} to calculate variance.")
+        return None
     
-    # Return top 25 teammates with their names and ratings
-    top_25_teammates = []
-    for teammate_id in sorted_teammates[:25]:
-        teammate_info = {
-            "name": player_names[teammate_id],
-            "rating": {
-                "mu": teammate_ratings[teammate_id].mu,
-                "sigma": teammate_ratings[teammate_id].sigma
-            }
-        }
-        top_25_teammates.append(teammate_info)
-        
-    return top_25_teammates
+    # Calculate variance of rating changes
+    rating_variance = statistics.variance(player_ratings_changes)
+
+    # Average streak
+    avg_streak = sum(win_loss_streaks) / len(win_loss_streaks) if win_loss_streaks else 1
+
+    # We'll invert the variance and normalize with the average streak to get consistency
+    epsilon = 0.0001
+    consistency = (1 / (rating_variance + epsilon)) * avg_streak
 
 
+    print(f"For player {player_name}:")
+    print(f"Win/Loss Streaks: {win_loss_streaks}")
+    print(f"Rating Variance: {rating_variance}")
+    print(f"Average Streak: {avg_streak}")
+    print(f"Consistency: {consistency}")
+    
+    return consistency
+
+def calculate_all_players_consistency(game_data, player_rating_history):
+    all_players_consistency = {}
+    for game in game_data:
+        for player in game['players']:
+            name = player['user']['name']
+            if name not in all_players_consistency:
+                all_players_consistency[name] = calculate_consistency(name, game_data, player_rating_history)
+                
+    sorted_players = sorted(all_players_consistency.items(), key=lambda x: (x[1] is None, x[1]), reverse=True)
+
+    
+    print("\nAll Players Sorted by Consistency (Highest to Lowest):")
+    for player, cons_value in sorted_players:
+        print(f"{player}: {cons_value}")
+
+game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), 'NA')
+player_ratings, player_names, player_games, player_rating_history = calculate_ratings(game_data, 'NA')
+calculate_all_players_consistency(game_data, player_rating_history)
 
 def time_ago(past):
     now = datetime.now()

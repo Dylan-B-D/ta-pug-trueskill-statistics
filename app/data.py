@@ -76,9 +76,15 @@ def apply_mappings(combined_data):
     return combined_data
 
 def fetch_data(start_date, end_date, queue):
-    cached_data = load_from_cache(queue)
-    if cached_data:
-        return cached_data
+    try:
+        cached_data = load_from_cache(queue)
+        if cached_data:
+            return cached_data
+    except Exception as e:
+        print(f"Error loading from cache: {e}")
+        # We won't immediately refetch data here, but rather let it fall through 
+        # to the fetching logic below. This way, if the cache fails, we just fetch 
+        # fresh data as if the cache never existed.
 
     base_url = 'http://50.116.36.119/api/server/'
     
@@ -109,38 +115,51 @@ def fetch_data(start_date, end_date, queue):
     response_times = {}
 
     for url, json_replace, queue_filter in zip(urls, json_replaces, queue_filters):
-        start_time = time.time()
-        
-        response = requests.get(url)
-        
-        end_time = time.time()
-        response_time = end_time - start_time  # response time in seconds
+        try:
+            start_time = time.time()
+            response = requests.get(url)
+            end_time = time.time()
+            
+            if response.status_code != 200:
+                raise ValueError(f"Unexpected status code {response.status_code} from {url}")
 
-        response_times[queue_filter] = response_time
+            response_time = end_time - start_time
+            response_times[queue_filter] = response_time
 
-        json_content = response.text.replace(json_replace, '')
-
-        match = re.search(r'\[.*\]', json_content)
-        if match:
+            json_content = response.text.replace(json_replace, '')
+            match = re.search(r'\[.*\]', json_content)
+            
+            if not match:
+                raise ValueError("No valid JSON data found in response.")
+            
             json_content = match.group(0)
             game_data = json.loads(json_content)
-            
+
             # Filter for games
-            filtered_data = [game for game in game_data
-                             if game['queue']['name'] == queue_filter
-                             and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date]
+            filtered_data = [
+                game for game in game_data
+                if game['queue']['name'] == queue_filter
+                and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date
+            ]
+            
             combined_data.extend(filtered_data)
-        else:
-            raise ValueError("No valid JSON data found in response.")
-    
+            
+        except Exception as e:
+            print(f"Error fetching or processing data from {url}: {e}")
+            continue  # Skip to the next URL if there's an error with this one.
+
     print(f"Fetched {len(combined_data)} games for {queue} queue.")
     
     for q, r_time in response_times.items():
         print(f"Response time for {q} queue: {r_time:.4f} seconds.")
 
-    mapped_data = apply_mappings(combined_data)
-    save_to_cache(mapped_data, queue)    
-    return mapped_data
+    try:
+        mapped_data = apply_mappings(combined_data)
+        save_to_cache(mapped_data, queue)
+        return mapped_data
+    except Exception as e:
+        print(f"Error mapping or saving data: {e}")
+        return None
 
 
 def fetch_data_sh4z(start_date, end_date, queue):

@@ -1,0 +1,72 @@
+h2 {
+    text-align: center;
+}
+
+.content-container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    border: 1px solid var(--secondary-highlight);
+    border-radius: 4px;
+    background-color: var(--secondary-color);
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Form styling */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+input[type="file"] {
+    padding: 10px;
+    border: 1px solid var(--secondary-highlight);
+    border-radius: 4px;
+    background-color: var(--primary-color);
+    color: var(--secondary-color);
+    cursor: pointer;
+}
+
+/* Data presentation */
+div {
+    border-top: 1px solid var(--secondary-highlight);
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+p {
+    margin-bottom: 10px;
+}
+
+strong {
+    color: var(--primary-color);
+}
+
+/* Button styling */
+#b1 {
+    width: 50%;
+    font-weight: bold;
+    margin: 0 auto;
+    background-color: rgba(42, 42, 42, 0.5);
+    border: 1px solid var(--secondary-highlight);
+    color: #ddddddc4;
+    border-radius: 4px;
+    padding: 10px 12px;
+    transition: background-color 0.3s, border 0.3s;
+
+    font-family: 'Comfortaa', cursive;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+}
+
+#b1:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+

@@ -13,14 +13,24 @@ import itertools
 import math
 from collections import defaultdict
 import statistics
+import threading
 
 
 CACHE_FILE = "app/data/data_cache.json"
-CACHE_DURATION = 900
+CACHE_DURATION = 60
 
 player_games = {}
 
-
+def refresh_cache(start_date, end_date, queue):
+    try:
+        cache_file = cache_file_for_queue(queue)
+        if os.path.exists(cache_file):
+            with open(cache_file, 'r') as f:
+                cached = json.load(f)
+                if time.time() - cached['timestamp'] > CACHE_DURATION:
+                    fetch_and_process_data(start_date, end_date, queue)
+    except Exception as e:
+        print(f"Error in refresh_cache: {e}")
 
 def cache_file_for_queue(queue):
     return f"app/data/data_cache_{queue}.json"
@@ -38,8 +48,7 @@ def load_from_cache(queue):
     if os.path.exists(cache_file):
         with open(cache_file, 'r') as f:
             cached = json.load(f)
-            if time.time() - cached['timestamp'] <= CACHE_DURATION:
-                return cached['data']
+            return cached['data']
     return None
 
 
@@ -76,16 +85,21 @@ def apply_mappings(combined_data):
     return combined_data
 
 def fetch_data(start_date, end_date, queue):
+    cached_data = None
     try:
         cached_data = load_from_cache(queue)
-        if cached_data:
-            return cached_data
     except Exception as e:
         print(f"Error loading from cache: {e}")
-        # We won't immediately refetch data here, but rather let it fall through 
-        # to the fetching logic below. This way, if the cache fails, we just fetch 
-        # fresh data as if the cache never existed.
 
+    # If data is loaded from cache, start a background thread to check and refresh the cache
+    if cached_data:
+        threading.Thread(target=refresh_cache, args=(start_date, end_date, queue)).start()
+        return cached_data
+    else:
+        # If cache load fails, fetch data directly
+        return fetch_and_process_data(start_date, end_date, queue)
+
+def fetch_and_process_data(start_date, end_date, queue):
     base_url = 'http://50.116.36.119/api/server/'
     
     # Define URL and JSON replace based on queue choice
@@ -142,6 +156,12 @@ def fetch_data(start_date, end_date, queue):
                 and start_date <= datetime.fromtimestamp(game['timestamp'] / 1000) <= end_date
             ]
             
+            # Filter for games based on team size
+            filtered_data = [
+                game for game in filtered_data
+                if check_team_sizes(game)
+            ]
+
             combined_data.extend(filtered_data)
             
         except Exception as e:
@@ -161,6 +181,12 @@ def fetch_data(start_date, end_date, queue):
         print(f"Error mapping or saving data: {e}")
         return None
 
+
+def check_team_sizes(game):
+    team1_count = sum(1 for player in game['players'] if player['team'] == 1)
+    team2_count = sum(1 for player in game['players'] if player['team'] == 2)
+    
+    return (team1_count, team2_count) in [(2, 2), (7, 7)]
 
 def fetch_data_sh4z(start_date, end_date, queue):
     cached_data = load_from_cache(queue)
@@ -227,7 +253,6 @@ def fetch_data_sh4z(start_date, end_date, queue):
     save_to_cache(mapped_data, queue)    
     return mapped_data
 
-# Ensure that you have the necessary functions like load_from_cache, apply_mappings, and save_to_cache defined elsewhere in your code.
 
 
 
@@ -237,67 +262,53 @@ def print_ratings(player_ratings, player_names):
     for player_id in sorted_players:
         rating = player_ratings[player_id]
         print(f"Player: {player_names[player_id]}, Mu: {rating.mu:.2f}, Sigma: {rating.sigma:.2f}")
-def pick_order_sigma_adjustment(pick_order):
-
-    # Define the range of sigma adjustments based on pick order
-    sigma_min = 0.9  # 10% reduction for the best players
-    sigma_max = 1.1  # 10% increase for the least picked players
-    
-    # Linear adjustment based on pick order; can be modified for a different curve
-    return sigma_min + (sigma_max - sigma_min) * (pick_order - 1) / 11
-
-
 
 def compute_logit_bonus(pick_order, total_picks=12, delta=0.015):
-    """
-    Computes the bonus to be added to mu based on the pick order using the logit function.
-    """
-    # Normalize the pick order so that 1 becomes almost 1 and 12 becomes almost 0, then raise it to a power for more aggressive decrease
-    normalized_order = (total_picks - pick_order) / (total_picks -1)
+    normalized_order = (total_picks - pick_order) / (total_picks - 1)
+    logit_value = logit(normalized_order * (1 - (2 * delta)) + delta)
     
-    # Compute the logit value
-    logit_value = logit(normalized_order * (1-(2*delta)) + delta)
-    
-    # Further adjust the scaling factor to make bonus even more aggressive
-    bonus = 20 * logit_value / abs(logit(delta))
+    if pick_order < 6:
+        bonus = 2 * logit_value / abs(logit(delta))
+    else:
+        bonus = 20 * logit_value / abs(logit(delta))
     
     return bonus
 
-def calculate_draw_rate(queue):
-    game_data = fetch_data(datetime(2018, 11, 1), datetime.now(), queue)
+
+def calculate_draw_rate(game_data):
     total_matches = len(game_data)
-    draw_matches = sum(1 for game in game_data if game['winningTeam'] == 0)  # Assuming a winning team of 0 means a draw
+    draw_matches = sum(1 for game in game_data if game['winningTeam'] == 0)
     return draw_matches / total_matches if total_matches > 0 else 0
 
+def initialize_player_data(game_data):
+    player_ids = set(player['user']['id'] for match in game_data for player in match['players'])
+    player_data = {
+        'picks': {player_id: [] for player_id in player_ids},
+        'wins': {player_id: 0 for player_id in player_ids},
+        'names': {player['user']['id']: player['user']['name'] for match in game_data for player in match['players']},
+        'games': {player_id: 0 for player_id in player_ids},
+        'rating_history': {player_id: [] for player_id in player_ids}
+    }
+    return player_data
 
-def calculate_ratings(game_data, queue='NA'):
-    global player_names, player_picks 
-
-    # Initialize TrueSkill
-    draw_rate = calculate_draw_rate(queue)
-    custom_tau = 0.1
-    ts = trueskill.TrueSkill(draw_probability=draw_rate, tau=custom_tau) if queue != 'NA' else trueskill.TrueSkill(tau=custom_tau)
-
-
-    # Initialize tracking variables
-    all_player_ids = set(player['user']['id'] for match in game_data for player in match['players'])
-    player_picks = {player_id: [] for player_id in all_player_ids}
-    player_wins = {player_id: 0 for player_id in all_player_ids}
-    player_names = {player['user']['id']: player['user']['name'] for match in game_data for player in match['players']}
-    player_games = {player_id: 0 for player_id in all_player_ids}
-    player_rating_history = {player_id: [] for player_id in all_player_ids}
-
-    # Process each match
+def process_matches(game_data, player_data):
     for match in game_data:
+        team1_size = sum(1 for player in match['players'] if player['team'] == 1)
+        team2_size = sum(1 for player in match['players'] if player['team'] == 2)
+
+        # If teams are imbalanced, skip processing this match
+        if team1_size != team2_size:
+            continue
+        
         for player in match['players']:
             player_id = player['user']['id']
-            player_games[player_id] += 1
-            if player['pickOrder'] is not None and player['pickOrder'] > 0:
-                player_picks[player_id].append(player['pickOrder'])
+            player_data['games'][player_id] += 1
+            if player['pickOrder']:
+                player_data['picks'][player_id].append(player['pickOrder'])
             if match['winningTeam'] == player['team']:
-                player_wins[player_id] += 1
+                player_data['wins'][player_id] += 1
 
-    # Compute average pick rates and win rates
+def compute_avg_picks(player_picks):
     def recent_games_count(total_games):
         if total_games < 100:
             return total_games
@@ -306,101 +317,75 @@ def calculate_ratings(game_data, queue='NA'):
         else:
             return int(0.2 * total_games)
 
-    player_avg_picks = {}
-    player_win_rates = {}
+    avg_picks = {}
     for player_id, picks in player_picks.items():
         recent_games = recent_games_count(len(picks))
-        if recent_games == 0:
-            player_avg_picks[player_id] = 0  # or any other value that makes sense in this context
-        else:
-            player_avg_picks[player_id] = sum(picks[-recent_games:]) / recent_games
+        avg_picks[player_id] = sum(picks[-recent_games:]) / recent_games if recent_games else 0
+    return avg_picks
 
-    # Initialize the mu based on average pick and win rate
-    def mu_bonus(pick_order):
-        return compute_logit_bonus(pick_order)
-
-    # Adjust the win rate for players with fewer games
-    def adjusted_win_rate(win_rate, games_played):
-        MIN_GAMES_FOR_FULL_IMPACT = 15
-        if games_played < MIN_GAMES_FOR_FULL_IMPACT:
-            adjusted_win_rate = win_rate * (games_played / MIN_GAMES_FOR_FULL_IMPACT) + 0.5 * (1 - games_played / MIN_GAMES_FOR_FULL_IMPACT)
-            return adjusted_win_rate
-        return win_rate
-
-    # Adjust sigma for newer players and pick order
-    def sigma_adjustment(games_played, pick_order):
-        games_played_factor = 1.0
-        if games_played < 10:
-            games_played_factor = 1.5
-        elif games_played < 30:
-            games_played_factor = 1.25
-
-        pick_order_factor = pick_order_sigma_adjustment(pick_order)  # Using the previously defined function
-        return games_played_factor * pick_order_factor
-
-    # Initialize ratings
-    player_ratings = {}
-    for player_id, avg_pick in player_avg_picks.items():
+def adjust_ratings_based_on_pick_order(ts, player_ratings, player_games, avg_picks, queue, player_names):
+    for player_id, avg_pick in avg_picks.items():
         if queue != '2v2':
-            mu = ts.mu + mu_bonus(avg_pick)
+            mu = ts.mu + compute_logit_bonus(avg_pick)
         else:
             mu = ts.mu
-        sigma = ts.sigma * sigma_adjustment(player_games[player_id], avg_pick)
-        
-        # Ensure mu ± 3*sigma lies within [0, 50]
-        sigma = min(sigma, (50 - mu) / 3, mu / 3)
-        
+        sigma = ts.sigma
+
+        # Only apply the adjustment for players with less than 100 games
+        if player_games[player_id] < 100:    
+                scaling_factor = 0.9 - 0.085 * (avg_pick - 8)
+                mu = mu * scaling_factor
+
         player_ratings[player_id] = trueskill.Rating(mu=mu, sigma=sigma)
 
-    # print("Initialized Ratings:")
-    # print_ratings(player_ratings, player_names)
-    # print("\n")
 
-    # Process each match to adjust ratings
+
+def process_rating_adjustment(ts, game_data, player_ratings, player_data):
     for match in game_data:
-        # Create a list of teams and corresponding player ID lists for the TrueSkill rate function
-        teams = []
-        team_player_ids = []
+        team1_size = sum(1 for player in match['players'] if player['team'] == 1)
+        team2_size = sum(1 for player in match['players'] if player['team'] == 2)
+
+        # If teams are imbalanced, skip processing this match
+        if team1_size != team2_size:
+            continue
+        
+        teams, team_player_ids = [], []
         for team_number in [1, 2]:
             team = [player_ratings[player['user']['id']] for player in match['players'] if player['team'] == team_number]
             player_ids = [player['user']['id'] for player in match['players'] if player['team'] == team_number]
             teams.append(team)
             team_player_ids.append(player_ids)
 
-        # Adjust the team order if team 2 won the match
         if match['winningTeam'] == 2:
             teams.reverse()
             team_player_ids.reverse()
 
-        # Update ratings based on match outcome
         try:
-            # Update ratings based on match outcome
             new_ratings = ts.rate(teams)
         except FloatingPointError:
-            # Handle numerical instability error
             continue
         
-        # Store the updated skill ratings
-        for i, team in enumerate(teams):
-            for j, player_rating in enumerate(team):
-                player_ratings[team_player_ids[i][j]] = new_ratings[i][j]
-
         for i, team in enumerate(teams):
             for j, player_rating in enumerate(team):
                 player_id = team_player_ids[i][j]
                 player_ratings[player_id] = new_ratings[i][j]
-                
-                # Convert Rating object to a dictionary
                 rating_dict = {"mu": new_ratings[i][j].mu, "sigma": new_ratings[i][j].sigma}
-                
-                # Append the dictionary to player's rating history
-                player_rating_history[player_id].append(rating_dict)
+                player_data['rating_history'][player_id].append(rating_dict)
 
-    # print("Final Ratings after Match Processing:")
-    # print_ratings(player_ratings, player_names)
-    # print("\n")
+def calculate_ratings(game_data, queue='NA'):
+    draw_rate = calculate_draw_rate(game_data)
+    custom_tau = 0.08333333333333
+    ts = trueskill.TrueSkill(draw_probability=draw_rate, tau=custom_tau) if queue != 'NA' else trueskill.TrueSkill(tau=custom_tau)
 
-    return player_ratings, player_names, player_games, player_rating_history
+    player_data = initialize_player_data(game_data)
+    process_matches(game_data, player_data)
+    avg_picks = compute_avg_picks(player_data['picks'])
+    
+    player_ratings = {player_id: trueskill.Rating(mu=9, sigma=8.33) for player_id in player_data['games'].keys()}
+    adjust_ratings_based_on_pick_order(ts, player_ratings, player_data['games'], avg_picks, queue, player_data['names'])
+    process_rating_adjustment(ts, game_data, player_ratings, player_data)
+
+    return player_ratings, player_data['names'], player_data['games'], player_data['rating_history']
 
 
 

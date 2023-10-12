@@ -1,18 +1,25 @@
 {% extends "base.html" %}
 
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/route-decoder.css') }}">
+{% endblock %}
+
 {% block content %}
+<div class="content-container">
 <h2>Route Decoder</h2>
 
 <form action="{{ url_for('route_decoder') }}" method="post" enctype="multipart/form-data">
-    <label for="file">Upload Route File:</label>
-    <input type="file" name="file" id="file">
-    <br><br>
-    <input type="submit" value="Upload and Decode">
+  <div class="file-upload-wrapper" id="b1">
+    <label for="file">Choose a Route File...</label>
+    <input type="file" name="file" id="file" onchange="this.form.submit();" hidden>
+  </div>
 </form>
 
 {% if data %}
 <div>
-    <h3>File Data: {{ filename }}</h3>
+    <p><strong>Loaded File: </strong>{{ filename }}</p>
+    <h3>File Data:</h3>
     <p><strong>Route File Version:</strong> {{ data.routeFileVersion }}</p>
     <p><strong>Map Name:</strong> {{ data.mapName }}</p>
     <p><strong>Class Abbreviation:</strong> {{ data.classAbbr }}</p>
@@ -28,8 +35,8 @@
 
 {% if mirrored_file %}
 <br>
-<h3>Download Mirrored Route</h3>
-<a href="{{ url_for('download_file', filename=mirrored_file) }}">Download Mirrored Route</a>
+<a href="{{ url_for('download_file', filename=mirrored_file) }}" id="b1">Download Mirrored Route</a>
+
 {% endif %}
 
 {% with messages = get_flashed_messages() %}
@@ -41,5 +48,5 @@
     </ul>
   {% endif %}
 {% endwith %}
-
+</div>
 {% endblock %}

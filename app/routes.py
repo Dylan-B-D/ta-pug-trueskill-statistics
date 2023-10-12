@@ -410,6 +410,7 @@ def inject_compute_rgb():
 @app.route('/route-decoder', methods=['GET', 'POST'])
 def route_decoder():
     mirrored_file = None
+    filename = None
     data = None  # This will hold the original data
     print(f"App root: {app.root_path}")
 
@@ -423,7 +424,7 @@ def route_decoder():
             flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
+            filename = secure_filename(file.filename)  # Store the filename
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
 
@@ -445,7 +446,7 @@ def route_decoder():
             mirrored_file = os.path.basename(output_file_reencrypted_mirrored)
             os.remove(filepath)
 
-    return render_template('route-decoder.html', mirrored_file=mirrored_file, data=data)  # Send the original data to the template
+    return render_template('route-decoder.html', mirrored_file=mirrored_file, data=data, filename=filename)
 
 
 

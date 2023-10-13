@@ -7,27 +7,27 @@
         <h2>Info</h2>
             <h3>TrueSkill (TS)</h3>
             <p>
-                The Trueskill value represents the lower bound of someones estimated skill <strong>μ</strong>, and is currently calulated as <strong>(μ - 2σ)</strong>, where <strong>σ</strong> is the players uncertainty.
+                The Trueskill value represents the lower bound of someone's estimated skill <strong>μ</strong>, and is currently calculated as <strong>(μ - 2σ)</strong>, where <strong>σ</strong> is the player's uncertainty.
             </p>
 
             <h3>Mu (μ)</h3>
             <p>
-                Represents the estimated skill of a player. When a player wins a game, <strong>μ</strong> increases, and when they lose, <strong>μ</strong> decreases. The magnitude of this change depends on the expected outcome and the uncertainty <strong>σ</strong>.
+                Represents the estimated skill of a player. When a player wins a game, <strong>μ</strong> increases, and when they lose <strong>μ</strong> decreases. The magnitude of this change depends on the expected outcome and the uncertainty <strong>σ</strong>.
             </p>
 
             <h3>Sigma (σ)</h3>
             <p>
-                Denotes the uncertainty in a player's skill estimation. A new player will have a high <strong>σ</strong> because the system is unsure of their skill. As a player plays more games, <strong>σ</strong> decreases, signifying increased confidence in the <strong>μ</strong> estimation.
+                Denotes the uncertainty in a player's skill estimation. A new player will have a high <strong>σ</strong> because the system is unsure of their skill. With more games, <strong>σ</strong> decreases, signifying increased confidence in the <strong>μ</strong> estimation.
             </p>
 
             <h3>Adjusted Ratings</h3>
             <p>
-                Players are initialized based on their average pick in the bullybot, so that new players are not ovverated. Late pick players that have few games, also have a scaling penalty to their rating, as otherwise the system often overestimates thier initial skill.
+                Players are initialized based on their average pick in Bullybot so that new players are not overrated. Late-pick players that have few games, also have a scaling penalty to their rating, as otherwise the system often overestimates their initial skill.
             </p>
 
             <h3>Win Chance</h3>
             <p>
-                This is derived by from the Mu and Sigma values of players in each team.
+                This is derived from the Mu and Sigma values of players in each team.
             </p>
     </div>
 {% endblock %}
